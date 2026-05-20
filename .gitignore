@@ -1,0 +1,4 @@
+serviceAccount.json
+logs/
+.env
+dist/
