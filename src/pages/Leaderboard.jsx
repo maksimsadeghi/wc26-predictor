@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { subscribeLeaderboard, subscribeLeague } from '../services/firestore'
 
 const RANK_ICON = r => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : r
 
 export default function Leaderboard() {
+  const navigate = useNavigate()
   const { leagueId }  = useParams()
   const { user }      = useAuth()
   const [scores,  setScores]  = useState([])
@@ -21,8 +22,17 @@ export default function Leaderboard() {
   if (loading) return <div className="spinner-wrap"><div className="spinner" /></div>
 
   return (
+    //Leaderboard Button
     <div className="page">
-      <h1 className="page-title">{league?.name || 'Leaderboard'}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+  <h1 className="page-title" style={{ marginBottom: 0 }}>{league?.name || 'Leaderboard'}</h1>
+  <button
+    className="btn btn-ghost text-sm"
+    onClick={() => navigate(`/league/${leagueId}/predictions`)}
+  >
+    ⚽ Predictions
+  </button>
+</div>
       <p className="page-sub">Updates live after each result is confirmed.</p>
 
       <div className="pts-grid">
