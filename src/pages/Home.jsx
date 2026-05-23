@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect} from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { createLeague, joinLeague } from '../services/firestore'
+import { createLeague, joinLeague, subscribeMyLeagues } from '../services/firestore'
 
 export default function Home() {
   const { user }   = useAuth()
@@ -12,6 +12,12 @@ export default function Home() {
   const [code, setCode]       = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
+
+  //My Leagues block
+  const [myLeagues, setMyLeagues] = useState([])
+useEffect(() => {
+  return subscribeMyLeagues(user.uid, setMyLeagues)
+}, [user.uid])
 
   async function handleCreate() {
     if (!name.trim()) return
@@ -39,7 +45,28 @@ export default function Home() {
     <div className="page">
       <h1 className="page-title">Welcome, {user?.displayName?.split(' ')[0]} 👋</h1>
       <p className="page-sub">Create a private league with friends or join one with an invite code.</p>
-
+      
+      {myLeagues.length > 0 && (
+  <div style={{ marginBottom: 32 }}>
+    <div className="section-label">My Leagues</div>
+    {myLeagues.map(league => (
+      <div
+        key={league.id}
+        className="card"
+        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+        onClick={() => navigate(`/league/${league.id}/predictions`)}
+      >
+        <div>
+          <div style={{ fontFamily: 'var(--font-head)', fontSize: 18, fontWeight: 700 }}>{league.name}</div>
+          <div className="text-xs muted" style={{ marginTop: 2 }}>
+            {league.members?.length || 0} members · Code: {league.code}
+          </div>
+        </div>
+        <span style={{ fontSize: 20 }}>→</span>
+      </div>
+    ))}
+  </div>
+)}
       {!mode && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, maxWidth: 460 }}>
           <button className="card btn" style={{ flexDirection: 'column', gap: 10, padding: 24, cursor: 'pointer' }} onClick={() => setMode('create')}>

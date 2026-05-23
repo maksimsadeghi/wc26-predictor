@@ -183,3 +183,13 @@ export async function recalcLeaderboard(leagueId) {
     }, { merge: true })
   ))
 }
+
+//My Leagues
+export function subscribeMyLeagues(uid, cb) {
+  return onSnapshot(collection(db, 'leagues'), snap => {
+    const mine = snap.docs
+      .map(d => d.data())
+      .filter(league => league.members?.some(m => m.uid === uid))
+    cb(mine)
+  })
+}
