@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { subscribeMyPredictions, subscribeResults } from '../services/firestore'
 import { fetchMatches, fetchSquad } from '../services/apiFootball'
 import MatchCard from '../components/MatchCard'
 
 export default function Predictions() {
+  const navigate = useNavigate()
   const { leagueId }   = useParams()
   const { user }       = useAuth()
   const [matches,  setMatches]  = useState([])
@@ -67,10 +68,17 @@ export default function Predictions() {
   ]
 
   return (
-    <div className="page">
-      <h1 className="page-title">Predictions</h1>
-      <p className="page-sub">Your picks lock 1 hour before each match kicks off.</p>
-
+    <div className="page"> {/* Standings added to prediction page*/}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+  <h1 className="page-title" style={{ marginBottom: 0 }}>Predictions</h1>
+  <button
+    className="btn btn-ghost text-sm"
+    onClick={() => navigate(`/league/${leagueId}/leaderboard`)}
+  >
+    🏆 Standings
+  </button>
+</div>
+<p className="page-sub">Your picks lock 1 hour before each match kicks off.</p>
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
         {FILTERS.map(f => (
           <button

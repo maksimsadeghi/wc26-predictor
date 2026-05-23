@@ -14,6 +14,19 @@ export async function createLeague(uid, displayName, leagueName) {
     members: [{ uid, displayName, joinedAt: Date.now() }],
     createdAt: serverTimestamp(),
   })
+
+  //Set Score to 0 when Creating league
+  await setDoc(doc(db, 'scores', `${ref.id}_${uid}`), {
+  leagueId: ref.id,
+  uid,
+  displayName,
+  total: 0,
+  exact: 0,
+  correct: 0,
+  scorerHits: 0,
+  updatedAt: serverTimestamp(),
+})
+
   return { id: ref.id, code }
 }
 
@@ -27,6 +40,18 @@ export async function joinLeague(uid, displayName, code) {
   await updateDoc(leagueDoc.ref, {
     members: [...data.members, { uid, displayName, joinedAt: Date.now() }],
   })
+    //Set Join league to 0
+    await setDoc(doc(db, 'scores', `${leagueDoc.id}_${uid}`), {
+    leagueId: leagueDoc.id,
+    uid,
+    displayName,
+    total: 0,
+    exact: 0,
+    correct: 0,
+    scorerHits: 0,
+    updatedAt: serverTimestamp(),
+  })
+
   return leagueDoc.id
 }
 
