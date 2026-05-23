@@ -33,9 +33,9 @@ const require    = createRequire(import.meta.url)
 // ── Config ─────────────────────────────────────────────────────────────────
 
 const DAILY_LIMIT    = 80          // max API calls per run — stays safely under 100/day
-const SQUAD_BATCH    = 10          // squads to fetch per run (48 teams ÷ 10 = ~5 days)
+const SQUAD_BATCH    = 32         // squads to fetch per run (48 teams ÷ 10 = ~5 days)// Caching all squads first time for now for trial (32)
 const WC_LEAGUE_ID   = 1           // FIFA World Cup
-const WC_SEASON      = 2026
+const WC_SEASON      = 2022       //CHANGE BACK JUST TRIAL
 
 // Load env from .env file in project root
 const envPath = path.resolve(__dirname, '../.env')
@@ -71,7 +71,8 @@ let callsThisRun = 0
 
 async function apiGet(path) {
   if (callsThisRun >= DAILY_LIMIT) throw new Error('Daily API limit reached — skipping')
-  callsThisRun++
+    await new Promise(r => setTimeout(r, 1200)) // wait 1.2 seconds between calls
+    callsThisRun++
   console.log(`  [API call ${callsThisRun}/${DAILY_LIMIT}] GET ${path}`)
   const res = await fetch(`https://v3.football.api-sports.io${path}`, {
     headers: {
@@ -94,7 +95,7 @@ async function apiGet(path) {
 
 async function ensureFixtures() {
   console.log('\n📅  Checking fixtures cache…')
-  const ref    = db.collection('_cache').doc('fixtures_2026')
+  const ref    = db.collection('_cache').doc('fixtures_2022') //Trial
   const cached = await ref.get()
 
   if (cached.exists) {
