@@ -10,7 +10,7 @@ function scorerPts(pos) {
   return 4
 }
 
-export default function MatchCard({ match, leagueId, uid, myPrediction, result, squads }) {
+export default function MatchCard({ match, leagueId, uid, myPrediction, allPredictions, result, squads }) {
   const [homeScore,    setHomeScore]    = useState(myPrediction?.homeScore    ?? 0)
   const [awayScore,    setAwayScore]    = useState(myPrediction?.awayScore    ?? 0)
   const [firstTeam,    setFirstTeam]    = useState(myPrediction?.firstTeam    || null)
@@ -20,15 +20,15 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, result, 
   const [saving,       setSaving]       = useState(false)
 
   const isPast = result && result.status === 'FT'
-  const isLocked = isPast || (new Date(match.date) - Date.now() < 30 * 60 * 1000) // Set to lock 30 minutes before start
+  const isLocked = isPast || (new Date(match.date) - Date.now() < 30 * 60 * 1000)
   const [lockState, setLockState] = useState(isLocked)
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    setLockState(isPast || (new Date(match.date) - Date.now() < 30 * 60 * 1000))
-  }, 60000)
-  return () => clearInterval(interval)
-}, [match.date, isPast])
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLockState(isPast || (new Date(match.date) - Date.now() < 30 * 60 * 1000))
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [match.date, isPast])
 
   const persist = useCallback(
     debounce(async (pred) => {
@@ -70,7 +70,6 @@ useEffect(() => {
   const matchDate   = new Date(match.date)
   const timeStr     = matchDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 
-  // Points breakdown when result is available
   const bd = isPast ? pointsBreakdown(
     { homeScore, awayScore, firstTeam, firstScorer },
     result
@@ -94,6 +93,7 @@ useEffect(() => {
               {bd.total > 0 ? `+${bd.total}` : '0'} pts
             </span>
           )}
+          {lockState && !isPast && <span className="badge badge-amber">🔴 LIVE</span>}
           {isPast && <span className="badge badge-gray">FINAL</span>}
         </div>
       </div>
@@ -102,28 +102,27 @@ useEffect(() => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <TeamSide team={match.home} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-          <button className="score-btn" onClick={() => changeScore('home', -1)}  disabled={lockState}>−</button>
+          <button className="score-btn" onClick={() => changeScore('home', -1)} disabled={lockState}>−</button>
           <div className="score-val" style={isPast && result ? { color: 'var(--green)' } : {}}>
             {isPast && result ? result.homeScore : homeScore}
           </div>
-          <button className="score-btn" onClick={() => changeScore('home', 1)}  disabled={lockState}>+</button>
+          <button className="score-btn" onClick={() => changeScore('home', 1)} disabled={lockState}>+</button>
         </div>
         <div style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0 }}>vs</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-          <button className="score-btn" onClick={() => changeScore('away', -1)}  disabled={lockState}>−</button>
+          <button className="score-btn" onClick={() => changeScore('away', -1)} disabled={lockState}>−</button>
           <div className="score-val" style={isPast && result ? { color: 'var(--green)' } : {}}>
             {isPast && result ? result.awayScore : awayScore}
           </div>
-          <button className="score-btn" onClick={() => changeScore('away', 1)}  disabled={lockState}>+</button>
+          <button className="score-btn" onClick={() => changeScore('away', 1)} disabled={lockState}>+</button>
         </div>
         <TeamSide team={match.away} right />
       </div>
 
-      {/* ── Pre-result: bonus pickers ── */}
+      {/* ── Pre-kickoff: bonus pickers ── */}
       {!lockState && (
         <div style={{ marginTop: 10, borderTop: '0.5px solid var(--border)', paddingTop: 10 }}>
           <div style={{ display: 'flex', gap: 8 }}>
-            {/* First to Score */}
             <button
               className={`bonus-trigger ${firstTeam ? 'amber-pick' : ''}`}
               onClick={() => setOpenPanel(p => p === 'fts' ? null : 'fts')}
@@ -137,7 +136,6 @@ useEffect(() => {
               </span>
             </button>
 
-            {/* First Goalscorer */}
             <button
               className={`bonus-trigger ${firstScorer ? 'blue-pick' : ''}`}
               onClick={() => setOpenPanel(p => p === 'scorer' ? null : 'scorer')}
@@ -157,7 +155,6 @@ useEffect(() => {
             </button>
           </div>
 
-          {/* FTS dropdown */}
           {openPanel === 'fts' && (
             <div className="drop-panel">
               <div className="drop-header">Which team scores first?</div>
@@ -176,7 +173,6 @@ useEffect(() => {
             </div>
           )}
 
-          {/* Scorer dropdown */}
           {openPanel === 'scorer' && (
             <div className="drop-panel">
               <div className="drop-header">Who scores first? · Position earns bonus pts</div>
@@ -213,49 +209,100 @@ useEffect(() => {
         </div>
       )}
 
-      {/* ── Post-result: prediction vs actual comparison ── */}
-      {isPast && result && bd && (
+      {/* ── Post-kickoff: everyone's picks + comparison ── */}
+      {lockState && (
         <div style={{ marginTop: 10, borderTop: '0.5px solid var(--border)', paddingTop: 10 }}>
-          {/* Side-by-side comparison */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-            {/* Your prediction */}
-            <div style={{ background: 'rgba(255,255,255,.03)', borderRadius: 8, padding: '8px 10px' }}>
-              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5 }}>Your prediction</div>
-              <div style={{
-                fontFamily: 'var(--font-head)', fontSize: 20, fontWeight: 700,
-                color: bd.exactBonus > 0 ? 'var(--green)' : bd.result > 0 ? 'var(--amber)' : 'var(--text-3)',
-              }}>
-                {homeScore} – {awayScore}
+
+          {/* Everyone's picks trigger */}
+          <button
+            className="bonus-trigger"
+            style={{ width: '100%', marginBottom: openPanel === 'everyone' ? 5 : 0 }}
+            onClick={() => setOpenPanel(p => p === 'everyone' ? null : 'everyone')}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span>👥</span>
+              <span>Everyone's picks</span>
+              <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 20, background: 'rgba(255,255,255,.07)', color: 'var(--text-2)' }}>
+                {(allPredictions || []).length} submitted
+              </span>
+            </span>
+            <span style={{ fontSize: 10, color: 'var(--text-3)', display: 'inline-block', transform: openPanel === 'everyone' ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>▾</span>
+          </button>
+
+          {openPanel === 'everyone' && (
+            <div className="drop-panel" style={{ maxHeight: 300, overflowY: 'auto' }}>
+              <div className="drop-header">All predictions{isPast ? ' · colored by accuracy' : ' · results pending'}</div>
+              {(allPredictions || []).length === 0 ? (
+                <div style={{ padding: 12, fontSize: 12, color: 'var(--text-3)' }}>No predictions submitted yet</div>
+              ) : (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px 100px', gap: 8, padding: '6px 12px', fontSize: 10, color: 'var(--text-3)', fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', borderBottom: '0.5px solid var(--border)' }}>
+                    <span>Player</span><span style={{ textAlign: 'center' }}>Score</span><span>1st team</span><span>1st scorer</span>
+                  </div>
+                  {(allPredictions || []).map(pred => {
+                    const isMe      = pred.uid === uid
+                    const predBd    = isPast ? pointsBreakdown(pred, result) : null
+                    const initials  = pred.displayName?.split(' ').map(n => n[0]).join('').slice(0, 2) || '?'
+                    const scoreColor = predBd
+                      ? (predBd.exactBonus > 0 ? 'var(--green)' : predBd.result > 0 ? 'var(--amber)' : 'var(--text-3)')
+                      : 'var(--text-1)'
+                    const ftsOk    = isPast && result && pred.firstTeam   === result.firstTeamScore
+                    const scorerOk = isPast && result && pred.firstScorer === result.firstScorer
+                    return (
+                      <div key={pred.uid} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px 100px', gap: 8, padding: '8px 12px', borderBottom: '0.5px solid var(--border)', background: isMe ? 'var(--green-dim)' : 'transparent', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 22, height: 22, borderRadius: '50%', background: isMe ? 'var(--green)' : 'rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600, color: isMe ? 'var(--bg-0)' : 'var(--text-2)', flexShrink: 0 }}>{initials}</div>
+                          <span style={{ fontSize: 12, color: isMe ? 'var(--green)' : 'var(--text-1)', fontWeight: isMe ? 500 : 400 }}>{pred.displayName}{isMe ? ' (you)' : ''}</span>
+                          {predBd && predBd.total > 0 && <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 20, background: 'var(--green-dim)', color: 'var(--green)', fontWeight: 500 }}>+{predBd.total}</span>}
+                        </div>
+                        <div style={{ textAlign: 'center', fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 600, color: scoreColor }}>{pred.homeScore ?? '?'}–{pred.awayScore ?? '?'}</div>
+                        <div style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: ftsOk ? 'var(--amber)' : 'var(--text-2)' }}>{pred.firstTeam ? `⚡ ${pred.firstTeam}` : '—'}</div>
+                        <div style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: scorerOk ? 'var(--blue)' : 'var(--text-2)' }}>{pred.firstScorer ? `👕 ${pred.firstScorer}` : '—'}</div>
+                      </div>
+                    )
+                  })}
+                  {isPast && <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--text-3)' }}>Green = exact · Amber = correct result · Gray = wrong</div>}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Post-result comparison */}
+          {isPast && result && bd && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                <div style={{ background: 'rgba(255,255,255,.03)', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5 }}>Your prediction</div>
+                  <div style={{ fontFamily: 'var(--font-head)', fontSize: 20, fontWeight: 700, color: bd.exactBonus > 0 ? 'var(--green)' : bd.result > 0 ? 'var(--amber)' : 'var(--text-3)' }}>
+                    {homeScore} – {awayScore}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>
+                    {firstTeam ? `⚡ ${firstTeam}` : '⚡ no pick'}<br />
+                    {firstScorer ? `👕 ${firstScorer} (${scorerPos})` : '👕 no pick'}
+                  </div>
+                </div>
+                <div style={{ background: 'rgba(74,222,128,.05)', border: '.5px solid rgba(74,222,128,.15)', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: 'var(--green)', marginBottom: 5 }}>Actual result</div>
+                  <div style={{ fontFamily: 'var(--font-head)', fontSize: 20, fontWeight: 700, color: 'var(--green)' }}>
+                    {result.homeScore} – {result.awayScore}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-2)', marginTop: 3 }}>
+                    ⚡ {result.firstTeamScore || '—'}<br />
+                    👕 {result.firstScorer || '—'} {result.firstScorerPos ? `(${result.firstScorerPos})` : ''}
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>
-                {firstTeam ? `⚡ ${firstTeam}` : '⚡ no pick'}<br />
-                {firstScorer ? `👕 ${firstScorer} (${scorerPos})` : '👕 no pick'}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {bd.result      > 0 && <Tag color="green">+{bd.result} result</Tag>}
+                {bd.homeGoal    > 0 && <Tag color="green">+1 {match.home.name.split(' ')[0]} goals</Tag>}
+                {bd.awayGoal    > 0 && <Tag color="green">+1 {match.away.name.split(' ')[0]} goals</Tag>}
+                {bd.exactBonus  > 0 && <Tag color="green">+3 exact bonus</Tag>}
+                {bd.firstTeam   > 0 && <Tag color="amber">+2 first team</Tag>}
+                {bd.firstScorer > 0 && <Tag color="blue">+{bd.firstScorer} scorer ({result.firstScorerPos})</Tag>}
+                {bd.total === 0     && <Tag color="gray">no points this match</Tag>}
               </div>
             </div>
-
-            {/* Actual result */}
-            <div style={{ background: 'rgba(74,222,128,.05)', border: '.5px solid rgba(74,222,128,.15)', borderRadius: 8, padding: '8px 10px' }}>
-              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: 'var(--green)', marginBottom: 5 }}>Actual result</div>
-              <div style={{ fontFamily: 'var(--font-head)', fontSize: 20, fontWeight: 700, color: 'var(--green)' }}>
-                {result.homeScore} – {result.awayScore}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--text-2)', marginTop: 3 }}>
-                ⚡ {result.firstTeamScore || '—'}<br />
-                👕 {result.firstScorer || '—'} {result.firstScorerPos ? `(${result.firstScorerPos})` : ''}
-              </div>
-            </div>
-          </div>
-
-          {/* Points breakdown tags */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-            {bd.result      > 0 && <Tag color="green">+{bd.result} result</Tag>}
-            {bd.homeGoal    > 0 && <Tag color="green">+1 {match.home.name.split(' ')[0]} goals</Tag>}
-            {bd.awayGoal    > 0 && <Tag color="green">+1 {match.away.name.split(' ')[0]} goals</Tag>}
-            {bd.exactBonus  > 0 && <Tag color="green">+3 exact bonus</Tag>}
-            {bd.firstTeam   > 0 && <Tag color="amber">+2 first team</Tag>}
-            {bd.firstScorer > 0 && <Tag color="blue">+{bd.firstScorer} scorer ({result.firstScorerPos})</Tag>}
-            {bd.total === 0     && <Tag color="gray">no points this match</Tag>}
-          </div>
+          )}
         </div>
       )}
     </div>

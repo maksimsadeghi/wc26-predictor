@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { subscribeMyPredictions, subscribeResults } from '../services/firestore'
+import { subscribeMyPredictions, subscribeResults, subscribeAllPredictions } from '../services/firestore'
 import { fetchMatches, fetchSquad } from '../services/apiFootball'
 import MatchCard from '../components/MatchCard'
 
@@ -12,6 +12,7 @@ export default function Predictions() {
   const [matches,  setMatches]  = useState([])
   const [squads,   setSquads]   = useState({})
   const [myPreds,  setMyPreds]  = useState({})
+  const [allPreds, setAllPreds] = useState({})
   const [results,  setResults]  = useState({})
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('upcoming')
@@ -32,6 +33,7 @@ export default function Predictions() {
 
   useEffect(() => {
     const unsubPreds   = subscribeMyPredictions(leagueId, user.uid, setMyPreds)
+    const unsubAll     = subscribeAllPredictions(leagueId, setAllPreds)
     const unsubResults = subscribeResults(setResults)
     return () => { unsubPreds(); unsubResults() }
   }, [leagueId, user.uid])
@@ -81,7 +83,7 @@ export default function Predictions() {
           🏆 Standings
         </button>
       </div>
-      <p className="page-sub">Your picks lock 30 minutes before each match kicks off.</p>
+      <p className="page-sub">Your picks lock 30 minutes before each match kicks off. · Everyone's picks visible once locked</p>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
         {FILTERS.map(f => (
@@ -126,6 +128,7 @@ export default function Predictions() {
               leagueId={leagueId}
               uid={user.uid}
               myPrediction={myPreds[m.id]}
+              allPredictions={allPreds[m.id] || []}
               result={results[m.id]}
               squads={squads}
             />

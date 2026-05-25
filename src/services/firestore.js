@@ -218,3 +218,19 @@ export function subscribeMyLeagues(uid, cb) {
     cb(mine)
   })
 }
+
+export function subscribeAllPredictions(leagueId, cb) {
+  const q = query(
+    collection(db, 'predictions'),
+    where('leagueId', '==', leagueId),
+  )
+  return onSnapshot(q, snap => {
+    const map = {}
+    snap.docs.forEach(d => {
+      const data = d.data()
+      if (!map[data.matchId]) map[data.matchId] = []
+      map[data.matchId].push(data)
+    })
+    cb(map)
+  })
+}
