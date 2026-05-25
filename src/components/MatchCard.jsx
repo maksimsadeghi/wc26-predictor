@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { savePrediction, pointsBreakdown } from '../services/firestore'
 
 const DEBOUNCE_MS = 800
@@ -20,6 +20,15 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, result, 
   const [saving,       setSaving]       = useState(false)
 
   const isPast = result && result.status === 'FT'
+  const isLocked = isPast || (new Date(match.date) - Date.now() < 30 * 60 * 1000) // Set to lock 30 minutes before start
+  const [lockState, setLockState] = useState(isLocked)
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setLockState(isPast || (new Date(match.date) - Date.now() < 30 * 60 * 1000))
+  }, 60000)
+  return () => clearInterval(interval)
+}, [match.date, isPast])
 
   const persist = useCallback(
     debounce(async (pred) => {
@@ -31,7 +40,7 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, result, 
   )
 
   function changeScore(side, delta) {
-    if (isPast) return
+    if (lockState) return
     const next = side === 'home'
       ? Math.max(0, homeScore + delta)
       : Math.max(0, awayScore + delta)
@@ -93,25 +102,25 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, result, 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <TeamSide team={match.home} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-          <button className="score-btn" onClick={() => changeScore('home', -1)} disabled={isPast}>−</button>
+          <button className="score-btn" onClick={() => changeScore('home', -1)}  disabled={lockState}>−</button>
           <div className="score-val" style={isPast && result ? { color: 'var(--green)' } : {}}>
             {isPast && result ? result.homeScore : homeScore}
           </div>
-          <button className="score-btn" onClick={() => changeScore('home', 1)} disabled={isPast}>+</button>
+          <button className="score-btn" onClick={() => changeScore('home', 1)}  disabled={lockState}>+</button>
         </div>
         <div style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0 }}>vs</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-          <button className="score-btn" onClick={() => changeScore('away', -1)} disabled={isPast}>−</button>
+          <button className="score-btn" onClick={() => changeScore('away', -1)}  disabled={lockState}>−</button>
           <div className="score-val" style={isPast && result ? { color: 'var(--green)' } : {}}>
             {isPast && result ? result.awayScore : awayScore}
           </div>
-          <button className="score-btn" onClick={() => changeScore('away', 1)} disabled={isPast}>+</button>
+          <button className="score-btn" onClick={() => changeScore('away', 1)}  disabled={lockState}>+</button>
         </div>
         <TeamSide team={match.away} right />
       </div>
 
       {/* ── Pre-result: bonus pickers ── */}
-      {!isPast && (
+      {!lockState && (
         <div style={{ marginTop: 10, borderTop: '0.5px solid var(--border)', paddingTop: 10 }}>
           <div style={{ display: 'flex', gap: 8 }}>
             {/* First to Score */}
