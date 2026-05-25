@@ -277,7 +277,7 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--text-2)', marginTop: 3 }}>
                     ⚡ {result.firstTeamScore || '—'}<br />
-                    👕 {result.firstScorer || '—'} {result.firstScorerPos ? `(${result.firstScorerPos})` : ''}
+                    👕 {result.firstScorer || '—'}
                   </div>
                 </div>
               </div>
