@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import League from './pages/League'
 import Predictions from './pages/Predictions'
 import Leaderboard from './pages/Leaderboard'
+import Admin from './pages/Admin'
 
 function Protected({ children }) {
   const { user } = useAuth()
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/league/:leagueId" element={<Protected><League /></Protected>} />
         <Route path="/league/:leagueId/predictions" element={<Protected><Predictions /></Protected>} />
         <Route path="/league/:leagueId/leaderboard" element={<Protected><Leaderboard /></Protected>} />
+        <Route path="/admin" element={<Protected><Admin /></Protected>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
