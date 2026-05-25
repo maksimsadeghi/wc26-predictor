@@ -10,20 +10,18 @@ export default function Predictions() {
   const { leagueId }   = useParams()
   const { user }       = useAuth()
   const [matches,  setMatches]  = useState([])
-  const [squads,   setSquads]   = useState({})   // { teamId: [players] }
-  const [myPreds,  setMyPreds]  = useState({})   // { matchId: prediction }
-  const [results,  setResults]  = useState({})   // { matchId: result }
+  const [squads,   setSquads]   = useState({})
+  const [myPreds,  setMyPreds]  = useState({})
+  const [results,  setResults]  = useState({})
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('upcoming')
 
-  // Load matches from API-Football
   useEffect(() => {
     fetchMatches()
       .then(ms => { setMatches(ms); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
-  // Load squads lazily — fetch each unique team once
   useEffect(() => {
     const teamIds = [...new Set(matches.flatMap(m => [m.homeId, m.awayId]))]
     teamIds.forEach(id => {
@@ -32,12 +30,16 @@ export default function Predictions() {
     })
   }, [matches])
 
-  // Subscribe to my predictions and match results in real-time
   useEffect(() => {
     const unsubPreds   = subscribeMyPredictions(leagueId, user.uid, setMyPreds)
     const unsubResults = subscribeResults(setResults)
     return () => { unsubPreds(); unsubResults() }
   }, [leagueId, user.uid])
+
+  const rounds = useMemo(() => {
+    const unique = [...new Set(matches.map(m => m.round))]
+    return unique.sort()
+  }, [matches])
 
   const grouped = useMemo(() => {
     const now = Date.now()
@@ -46,7 +48,8 @@ export default function Predictions() {
       if (filter === 'upcoming') return t > now && m.status === 'NS'
       if (filter === 'live')     return ['1H','2H','HT','ET','P'].includes(m.status)
       if (filter === 'finished') return m.status === 'FT'
-      return true
+      if (filter === 'all')      return true
+      return m.round === filter
     })
 
     const groups = {}
@@ -68,17 +71,18 @@ export default function Predictions() {
   ]
 
   return (
-    <div className="page"> {/* Standings added to prediction page*/}
+    <div className="page">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-  <h1 className="page-title" style={{ marginBottom: 0 }}>Predictions</h1>
-  <button
-    className="btn btn-ghost text-sm"
-    onClick={() => navigate(`/league/${leagueId}/leaderboard`)}
-  >
-    🏆 Standings
-  </button>
-</div>
-<p className="page-sub">Your picks lock 1 hour before each match kicks off.</p>
+        <h1 className="page-title" style={{ marginBottom: 0 }}>Predictions</h1>
+        <button
+          className="btn btn-ghost text-sm"
+          onClick={() => navigate(`/league/${leagueId}/leaderboard`)}
+        >
+          🏆 Standings
+        </button>
+      </div>
+      <p className="page-sub">Your picks lock 30 minutes before each match kicks off.</p>
+
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
         {FILTERS.map(f => (
           <button
@@ -88,6 +92,17 @@ export default function Predictions() {
             onClick={() => setFilter(f.key)}
           >
             {f.label}
+          </button>
+        ))}
+        <div style={{ width: '100%', height: '0.5px', background: 'var(--border)', margin: '4px 0' }} />
+        {rounds.map(round => (
+          <button
+            key={round}
+            className={`btn ${filter === round ? 'btn-primary' : 'btn-ghost'} text-sm`}
+            style={{ padding: '6px 14px' }}
+            onClick={() => setFilter(round)}
+          >
+            {round}
           </button>
         ))}
       </div>
