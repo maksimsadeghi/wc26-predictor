@@ -115,9 +115,8 @@ useEffect(() => {
         <div className="pts-pill"><span className="pts-pill-label">Exact score</span><span className="pts-pill-val" style={{ color: 'var(--green)' }}>9 pts</span></div>
         <div className="pts-pill"><span className="pts-pill-label">Correct goals (per team)</span><span className="pts-pill-val" style={{ color: 'var(--green)' }}>+1 pt</span></div>
         <div className="pts-pill"><span className="pts-pill-label">First team to score</span><span className="pts-pill-val" style={{ color: 'var(--amber)' }}>+2 pts</span></div>
-        <div className="pts-pill"><span className="pts-pill-label">First scorer (FW)</span><span className="pts-pill-val" style={{ color: 'var(--blue)' }}>+4 pts</span></div>
-        <div className="pts-pill"><span className="pts-pill-label">First scorer (MF)</span><span className="pts-pill-val" style={{ color: 'var(--blue)' }}>+5 pts</span></div>
-        <div className="pts-pill"><span className="pts-pill-label">First scorer (DEF/GK)</span><span className="pts-pill-val" style={{ color: 'var(--blue)' }}>+6 pts</span></div>
+        <div className="pts-pill"><span className="pts-pill-label">First goalscorer</span><span className="pts-pill-val" style={{ color: 'var(--blue)' }}>+4 pts</span></div>
+
       </div>
 
       {displayScores.length === 0 && (

@@ -3,10 +3,7 @@ import { savePrediction, pointsBreakdown } from '../services/firestore'
 
 const DEBOUNCE_MS = 800
 
-function scorerPts(pos) {
-  if (!pos) return 4
-  if (['GK', 'CB', 'RB', 'LB', 'DF'].includes(pos)) return 6
-  if (['CM', 'AM', 'MF'].includes(pos))              return 5
+function scorerPts() {
   return 4
 }
 
@@ -142,11 +139,7 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span>👕</span><span>First goalscorer</span>
-                {scorerPos && (
-                  <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 20, background: 'var(--blue-dim)', color: 'var(--blue)' }}>
-                    {scorerPos} +{scorerPts(scorerPos)}pts
-                  </span>
-                )}
+          
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 {firstScorer && <span style={{ fontSize: 11, maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstScorer}</span>}
@@ -186,14 +179,10 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
                   <div className="player-grid">
                     {players.length > 0
                       ? players.map(p => {
-                          const pts = scorerPts(p.pos)
-                          const ptColor = p.pos === 'GK' || ['CB','RB','LB'].includes(p.pos) ? 'var(--blue)'
-                                        : ['CM','AM'].includes(p.pos) ? '#a78bfa' : 'var(--text-3)'
                           return (
                             <button key={p.id} className={`player-row ${firstScorer === p.name ? 'selected' : ''}`} onClick={() => pickScorer(p.name, p.pos)}>
                               <span className="player-pos">{p.pos}</span>
                               <span className="player-name">{p.name}</span>
-                              <span style={{ fontSize: 10, color: ptColor, width: 20, textAlign: 'right' }}>+{pts}</span>
                               <span className="player-tick">{firstScorer === p.name ? '✓' : ''}</span>
                             </button>
                           )

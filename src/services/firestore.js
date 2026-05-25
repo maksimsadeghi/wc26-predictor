@@ -123,12 +123,9 @@ export function subscribeLeaderboard(leagueId, cb) {
 
 // ── Scoring engine ─────────────────────────────────────────────────────────
 
-// Points for a correct first goalscorer based on their position
-function scorerPts(pos) {
-  if (!pos) return 4
-  if (['GK', 'CB', 'RB', 'LB', 'DF'].includes(pos)) return 6   // GK / defender
-  if (['CM', 'AM', 'MF'].includes(pos))              return 5   // midfielder
-  return 4                                                        // RW, LW, ST, FW
+// Points for a correct first goalscorer
+function scorerPts() {
+  return 4                                                       
 }
 
 export function calcPoints(prediction, result) {
