@@ -69,7 +69,8 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
 
   const bd = isPast ? pointsBreakdown(
     { homeScore, awayScore, firstTeam, firstScorer },
-    result
+    result,
+    allPredictions || []
   ) : null
 
   return (
@@ -289,6 +290,8 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
                 {bd.firstTeam   > 0 && <Tag color="amber">+2 first team</Tag>}
                 {bd.firstScorer > 0 && <Tag color="blue">+{bd.firstScorer} scorer ({result.firstScorerPos})</Tag>}
                 {bd.total === 0     && <Tag color="gray">no points this match</Tag>}
+                {bd.underdogScore  > 0 && <Tag color="amber">+{bd.underdogScore} underdog score 🐉</Tag>}
+                {bd.underdogScorer > 0 && <Tag color="amber">+{bd.underdogScorer} underdog scorer 🐉</Tag>}
               </div>
             </div>
           )}

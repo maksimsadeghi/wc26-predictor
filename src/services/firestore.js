@@ -128,7 +128,7 @@ function scorerPts() {
   return 4                                                       
 }
 
-export function calcPoints(prediction, result) {
+export function calcPoints(prediction, result, leaguePreds = []) {
   if (!prediction || !result || result.homeScore == null) return 0
   let pts = 0
   const pw = Math.sign(prediction.homeScore - prediction.awayScore)
@@ -145,11 +145,25 @@ export function calcPoints(prediction, result) {
   if (prediction.firstScorer && prediction.firstScorer === result.firstScorer)
     pts += scorerPts(result.firstScorerPos)
 
+  // Underdog bonus — scoreline
+  if (prediction.homeScore === result.homeScore && prediction.awayScore === result.awayScore) {
+    const total = leaguePreds.length
+    const scorePicks = leaguePreds.filter(p => p.homeScore === prediction.homeScore && p.awayScore === prediction.awayScore).length
+    if (total > 0 && scorePicks / total < 0.15) pts += 2
+  }
+
+  // Underdog bonus — first scorer
+  if (prediction.firstScorer && prediction.firstScorer === result.firstScorer) {
+    const total = leaguePreds.length
+    const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
+    if (total > 0 && scorerPicks / total < 0.05) pts += 2
+  } 
+
   return pts
 }
 
 // Breakdown for showing on the UI (how many points came from each component)
-export function pointsBreakdown(prediction, result) {
+export function pointsBreakdown(prediction, result, leaguePreds = []) {
   if (!prediction || !result || result.homeScore == null)
     return { result: 0, homeGoal: 0, awayGoal: 0, exactBonus: 0, firstTeam: 0, firstScorer: 0, total: 0 }
 
@@ -166,7 +180,22 @@ export function pointsBreakdown(prediction, result) {
     firstTeam:   prediction.firstTeam && prediction.firstTeam === result.firstTeamScore ? 2 : 0,
     firstScorer: prediction.firstScorer && prediction.firstScorer === result.firstScorer
                    ? scorerPts(result.firstScorerPos) : 0,
+    underdogScore:  0,
+    underdogScorer: 0,
   }
+
+  // Underdog bonus — scoreline
+  if (exactH && exactA && leaguePreds.length > 0) {
+    const scorePicks = leaguePreds.filter(p => p.homeScore === prediction.homeScore && p.awayScore === prediction.awayScore).length
+    if (scorePicks / leaguePreds.length < 0.15) breakdown.underdogScore = 2
+  }
+
+  // Underdog bonus — first scorer
+  if (prediction.firstScorer && prediction.firstScorer === result.firstScorer && leaguePreds.length > 0) {
+    const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
+    if (scorerPicks / leaguePreds.length < 0.05) breakdown.underdogScorer = 2
+  }
+
   breakdown.total = Object.values(breakdown).reduce((a, b) => a + b, 0)
   return breakdown
 }
@@ -181,13 +210,20 @@ export async function recalcLeaderboard(leagueId) {
   const results = {}
   resultsSnap.docs.forEach(d => { results[d.data().matchId] = d.data() })
 
+  const predsByMatch = {}
+  predsSnap.docs.forEach(d => {
+    const data = d.data()
+    if (!predsByMatch[data.matchId]) predsByMatch[data.matchId] = []
+    predsByMatch[data.matchId].push(data)
+  })
+
   const totals = {}
   predsSnap.docs.forEach(d => {
     const pred = d.data()
-    const pts  = calcPoints(pred, results[pred.matchId])
+    const pts  = calcPoints(pred, results[pred.matchId], predsByMatch[pred.matchId] || [])
     if (!totals[pred.uid]) totals[pred.uid] = { uid: pred.uid, total: 0, exact: 0, correct: 0, scorerHits: 0 }
     totals[pred.uid].total += pts
-    const bd = pointsBreakdown(pred, results[pred.matchId])
+    const bd = pointsBreakdown(pred, results[pred.matchId], predsByMatch[pred.matchId] || [])
     if (bd.exactBonus > 0)     totals[pred.uid].exact++
     else if (bd.result > 0)    totals[pred.uid].correct++
     if (bd.firstScorer > 0)    totals[pred.uid].scorerHits++
