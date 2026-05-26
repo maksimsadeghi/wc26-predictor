@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "wc-predictor-f9b48"
+  },
   "targets": {
     "wc26-predictormk": {
       "hosting": {

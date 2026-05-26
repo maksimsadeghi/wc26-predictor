@@ -276,6 +276,7 @@ async function main() {
     const matches = await ensureFixtures()
     await fetchPendingSquads(matches)
     await fetchPendingResults(matches)
+    await recalcAllLeagues()
   } catch (e) {
     console.error('\n❌  Fatal error:', e.message)
   }
@@ -284,5 +285,66 @@ async function main() {
   await logRun(callsThisRun)
   process.exit(0)
 }
+async function recalcAllLeagues() {
+  console.log('\n🏆  Recalculating leaderboards…')
+  const leaguesSnap = await db.collection('leagues').get()
+  for (const leagueDoc of leaguesSnap.docs) {
+    const leagueId = leagueDoc.id
+    const [predsSnap, resultsSnap] = await Promise.all([
+      db.collection('predictions').where('leagueId', '==', leagueId).get(),
+      db.collection('results').get(),
+    ])
+    const results = {}
+    resultsSnap.docs.forEach(d => { results[d.data().matchId] = d.data() })
+    const predsByMatch = {}
+    predsSnap.docs.forEach(d => {
+      const data = d.data()
+      if (!predsByMatch[data.matchId]) predsByMatch[data.matchId] = []
+      predsByMatch[data.matchId].push(data)
+    })
+    const totals = {}
+    predsSnap.docs.forEach(d => {
+      const pred = d.data()
+      const leaguePreds = predsByMatch[pred.matchId] || []
+      const result = results[pred.matchId]
+      if (!result) return
+      const pts = calcPointsAdmin(pred, result, leaguePreds)
+      if (!totals[pred.uid]) totals[pred.uid] = { uid: pred.uid, total: 0, exact: 0, correct: 0, scorerHits: 0 }
+      totals[pred.uid].total += pts
+    })
+    const members = leagueDoc.data()?.members || []
+    const memberMap = {}
+    members.forEach(m => { memberMap[m.uid] = m.displayName })
+    await Promise.all(Object.values(totals).map(entry =>
+      db.collection('scores').doc(`${leagueId}_${entry.uid}`).set({
+        leagueId, ...entry,
+        displayName: memberMap[entry.uid] || 'Unknown',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true })
+    ))
+    console.log(`  ✓  League ${leagueDoc.data().name} recalculated`)
+  }
+}
 
+function calcPointsAdmin(prediction, result, leaguePreds = []) {
+  if (!prediction || !result || result.homeScore == null) return 0
+  let pts = 0
+  const pw = Math.sign(prediction.homeScore - prediction.awayScore)
+  const rw = Math.sign(result.homeScore - result.awayScore)
+  if (pw === rw) pts += 4
+  if (prediction.homeScore === result.homeScore) pts += 1
+  if (prediction.awayScore === result.awayScore) pts += 1
+  if (prediction.homeScore === result.homeScore && prediction.awayScore === result.awayScore) pts += 3
+  if (prediction.firstTeam && prediction.firstTeam === result.firstTeamScore) pts += 2
+  if (prediction.firstScorer && prediction.firstScorer === result.firstScorer) pts += 4
+  if (prediction.homeScore === result.homeScore && prediction.awayScore === result.awayScore && leaguePreds.length > 0) {
+    const scorePicks = leaguePreds.filter(p => p.homeScore === prediction.homeScore && p.awayScore === prediction.awayScore).length
+    if (scorePicks / leaguePreds.length < 0.15) pts += 2
+  }
+  if (prediction.firstScorer && prediction.firstScorer === result.firstScorer && leaguePreds.length > 0) {
+    const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
+    if (scorerPicks / leaguePreds.length < 0.05) pts += 2
+  }
+  return pts
+}
 main()

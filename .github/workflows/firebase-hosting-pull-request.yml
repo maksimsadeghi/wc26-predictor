@@ -13,8 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: npm ci && npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_WC26_PREDICTORMK }}
-          projectId: wc26-predictormk
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_WC_PREDICTOR_F9B48 }}
+          projectId: wc-predictor-f9b48
