@@ -34,8 +34,8 @@ const require    = createRequire(import.meta.url)
 
 const DAILY_LIMIT    = 80          // max API calls per run — stays safely under 100/day
 const SQUAD_BATCH    = 32         // squads to fetch per run (48 teams ÷ 10 = ~5 days)// Caching all squads first time for now for trial (32)
-const WC_LEAGUE_ID   = 1           // FIFA World Cup
-const WC_SEASON      = 2022       //CHANGE BACK JUST TRIAL
+const WC_LEAGUE_ID   = 13          // FIFA World Cup 1 is World Cup this is just trial
+const WC_SEASON      = 2026       //CHANGE BACK JUST TRIAL
 
 // Load env from .env file in project root
 const envPath = path.resolve(__dirname, '../.env')
@@ -95,7 +95,7 @@ async function apiGet(path) {
 
 async function ensureFixtures() {
   console.log('\n📅  Checking fixtures cache…')
-  const ref    = db.collection('_cache').doc('fixtures_2022') //Trial
+  const ref    = db.collection('_cache').doc('fixtures_13_2026') //Trial 'fixtures_2026'
   const cached = await ref.get()
 
   if (cached.exists) {
