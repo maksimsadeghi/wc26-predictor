@@ -32,7 +32,7 @@ const require    = createRequire(import.meta.url)
 
 // ── Config ─────────────────────────────────────────────────────────────────
 
-const DAILY_LIMIT    = 80          // max API calls per run — stays safely under 100/day
+const DAILY_LIMIT    = 1000          // max API calls per run — stays safely under 100/day
 const SQUAD_BATCH    = 32         // squads to fetch per run (48 teams ÷ 10 = ~5 days)// Caching all squads first time for now for trial (32)
 const WC_LEAGUE_ID   = 13          // FIFA World Cup 1 is World Cup this is just trial
 const WC_SEASON      = 2026       //CHANGE BACK JUST TRIAL
