@@ -71,7 +71,7 @@ let callsThisRun = 0
 
 async function apiGet(path) {
   if (callsThisRun >= DAILY_LIMIT) throw new Error('Daily API limit reached — skipping')
-    await new Promise(r => setTimeout(r, 1200)) // wait 1.2 seconds between calls
+    await new Promise(r => setTimeout(r, 2000)) // wait 2 seconds between calls
     callsThisRun++
   console.log(`  [API call ${callsThisRun}/${DAILY_LIMIT}] GET ${path}`)
   const res = await fetch(`https://v3.football.api-sports.io${path}`, {
