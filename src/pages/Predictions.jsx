@@ -44,12 +44,14 @@ export default function Predictions() {
 
   const grouped = useMemo(() => {
     const now = Date.now()
+    const DONE = ['FT', 'AET', 'PEN', 'AWD', 'WO']
     const filtered = matches.filter(m => {
       const t = new Date(m.date).getTime()
       const status = results[m.id]?.status || m.status
-      if (filter === 'upcoming') return t > now && status === 'NS'
-      if (filter === 'live')     return ['1H','2H','HT','ET','P'].includes(status)
-      if (filter === 'finished') return status === 'FT'
+      const isDone = DONE.includes(status)
+      if (filter === 'upcoming') return t > now
+      if (filter === 'live')     return t <= now && !isDone && (now - t) < 3 * 60 * 60 * 1000
+      if (filter === 'finished') return isDone || (now - t) >= 3 * 60 * 60 * 1000
       if (filter === 'all')      return true
       return m.round === filter
     })

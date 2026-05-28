@@ -16,8 +16,11 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
   const [openPanel,    setOpenPanel]    = useState(null)
   const [saving,       setSaving]       = useState(false)
 
-  const isPast = result && result.status === 'FT'
+  const DONE_STATUSES = ['FT', 'AET', 'PEN', 'AWD', 'WO']
+  const msSinceKickoff = Date.now() - new Date(match.date).getTime()
+  const isPast = (result && DONE_STATUSES.includes(result.status)) || DONE_STATUSES.includes(match.status) || msSinceKickoff >= 3 * 60 * 60 * 1000
   const isLocked = isPast || (new Date(match.date) - Date.now() < 30 * 60 * 1000)
+  const isLiveBadge = !isPast && msSinceKickoff > 0 && msSinceKickoff < 3 * 60 * 60 * 1000
   const [lockState, setLockState] = useState(isLocked)
 
   useEffect(() => {
@@ -100,7 +103,7 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
               {bd.total > 0 ? `+${bd.total}` : '0'} pts
             </span>
           )}
-          {lockState && !isPast && <span className="badge badge-amber">🔴 LIVE</span>}
+          {isLiveBadge && <span className="badge badge-amber">🔴 LIVE</span>}
           {isPast && <span className="badge badge-gray">FINAL</span>}
         </div>
       </div>

@@ -181,8 +181,9 @@ async function fetchPendingResults(matches) {
     const ref    = db.collection('results').doc(String(m.id))
     const cached = await ref.get()
 
-    // Skip if already marked FT
-    if (cached.exists && cached.data().status === 'FT') { skipped++; continue }
+    // Skip if already in a terminal state
+    const DONE = ['FT', 'AET', 'PEN', 'AWD', 'WO']
+    if (cached.exists && DONE.includes(cached.data().status)) { skipped++; continue }
 
     try {
       const data      = await apiGet(`/fixtures?id=${m.id}`)
