@@ -79,7 +79,7 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
   const matchDate   = new Date(match.date)
   const timeStr     = matchDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 
-  const bd = isPast ? pointsBreakdown(
+  const bd = isPast && myPrediction ? pointsBreakdown(
     { homeScore, awayScore, firstTeam, firstScorer },
     result,
     allPredictions || []
@@ -283,18 +283,24 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
           )}
 
           {/* Post-result comparison */}
-          {isPast && result && bd && (
+          {isPast && result && (
             <div style={{ marginTop: 8 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                 <div style={{ background: 'rgba(255,255,255,.03)', borderRadius: 8, padding: '8px 10px' }}>
                   <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5 }}>Your prediction</div>
-                  <div style={{ fontFamily: 'var(--font-head)', fontSize: 20, fontWeight: 700, color: bd.exactBonus > 0 ? 'var(--green)' : bd.result > 0 ? 'var(--amber)' : 'var(--text-3)' }}>
-                    {homeScore} – {awayScore}
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>
-                    {firstTeam ? `⚡ ${firstTeam === 'NO_GOALS' ? 'No goals' : firstTeam}` : '⚡ no pick'}<br />
-                    {firstScorer ? `👕 ${firstScorer === 'NO_SCORER' ? 'No scorer' : `${firstScorer} (${scorerPos})`}` : '👕 no pick'}
-                  </div>
+                  {myPrediction ? (
+                    <>
+                      <div style={{ fontFamily: 'var(--font-head)', fontSize: 20, fontWeight: 700, color: bd?.exactBonus > 0 ? 'var(--green)' : bd?.result > 0 ? 'var(--amber)' : 'var(--text-3)' }}>
+                        {homeScore} – {awayScore}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>
+                        {firstTeam ? `⚡ ${firstTeam === 'NO_GOALS' ? 'No goals' : firstTeam}` : '⚡ no pick'}<br />
+                        {firstScorer ? `👕 ${firstScorer === 'NO_SCORER' ? 'No scorer' : `${firstScorer} (${scorerPos})`}` : '👕 no pick'}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4 }}>No prediction submitted</div>
+                  )}
                 </div>
                 <div style={{ background: 'rgba(74,222,128,.05)', border: '.5px solid rgba(74,222,128,.15)', borderRadius: 8, padding: '8px 10px' }}>
                   <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.8px', textTransform: 'uppercase', color: 'var(--green)', marginBottom: 5 }}>Actual result</div>
@@ -307,17 +313,19 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {bd.result      > 0 && <Tag color="green">+{bd.result} result</Tag>}
-                {bd.homeGoal    > 0 && <Tag color="green">+1 {match.home.name.split(' ')[0]} goals</Tag>}
-                {bd.awayGoal    > 0 && <Tag color="green">+1 {match.away.name.split(' ')[0]} goals</Tag>}
-                {bd.exactBonus  > 0 && <Tag color="green">+3 exact bonus</Tag>}
-                {bd.firstTeam   > 0 && <Tag color="amber">+2 first team</Tag>}
-                {bd.firstScorer > 0 && <Tag color="blue">+{bd.firstScorer} scorer ({result.firstScorerPos})</Tag>}
-                {bd.total === 0     && <Tag color="gray">no points this match</Tag>}
-                {bd.underdogScore  > 0 && <Tag color="amber">+{bd.underdogScore} underdog score 🐉</Tag>}
-                {bd.underdogScorer > 0 && <Tag color="amber">+{bd.underdogScorer} underdog scorer 🐉</Tag>}
-              </div>
+              {bd && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {bd.result      > 0 && <Tag color="green">+{bd.result} result</Tag>}
+                  {bd.homeGoal    > 0 && <Tag color="green">+1 {match.home.name.split(' ')[0]} goals</Tag>}
+                  {bd.awayGoal    > 0 && <Tag color="green">+1 {match.away.name.split(' ')[0]} goals</Tag>}
+                  {bd.exactBonus  > 0 && <Tag color="green">+3 exact bonus</Tag>}
+                  {bd.firstTeam   > 0 && <Tag color="amber">+2 first team</Tag>}
+                  {bd.firstScorer > 0 && <Tag color="blue">+{bd.firstScorer} scorer ({result.firstScorerPos})</Tag>}
+                  {bd.total === 0     && <Tag color="gray">no points this match</Tag>}
+                  {bd.underdogScore  > 0 && <Tag color="amber">+{bd.underdogScore} underdog score 🐉</Tag>}
+                  {bd.underdogScorer > 0 && <Tag color="amber">+{bd.underdogScorer} underdog scorer 🐉</Tag>}
+                </div>
+              )}
             </div>
           )}
         </div>
