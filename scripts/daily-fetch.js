@@ -101,8 +101,11 @@ async function ensureFixtures() {
   if (cached.exists) {
     const age = Date.now() - cached.data().fetchedAt.toMillis()
     const ageH = Math.round(age / 3600000)
-    console.log(`  ✓  Fixtures cached (${ageH}h ago) — skipping`)
-    return cached.data().matches
+    if (ageH < 6) {
+      console.log(`  ✓  Fixtures cached (${ageH}h ago) — skipping`)
+      return cached.data().matches
+    }
+    console.log(`  ♻️  Fixtures cache stale (${ageH}h ago) — refreshing`)
   }
 
   console.log('  Fetching all fixtures…')
@@ -335,13 +338,17 @@ function calcPointsAdmin(prediction, result, leaguePreds = []) {
   if (prediction.homeScore === result.homeScore) pts += 1
   if (prediction.awayScore === result.awayScore) pts += 1
   if (prediction.homeScore === result.homeScore && prediction.awayScore === result.awayScore) pts += 3
-  if (prediction.firstTeam && prediction.firstTeam === result.firstTeamScore) pts += 2
-  if (prediction.firstScorer && prediction.firstScorer === result.firstScorer) pts += 4
+  if (prediction.firstTeam) {
+    const ftsHit = prediction.firstTeam === 'NO_GOALS' ? result.firstTeamScore == null : prediction.firstTeam === result.firstTeamScore
+    if (ftsHit) pts += 2
+  }
+  const scorerHit = prediction.firstScorer && (prediction.firstScorer === 'NO_SCORER' ? result.firstScorer == null : prediction.firstScorer === result.firstScorer)
+  if (scorerHit) pts += 4
   if (prediction.homeScore === result.homeScore && prediction.awayScore === result.awayScore && leaguePreds.length > 0) {
     const scorePicks = leaguePreds.filter(p => p.homeScore === prediction.homeScore && p.awayScore === prediction.awayScore).length
     if (scorePicks / leaguePreds.length < 0.15) pts += 2
   }
-  if (prediction.firstScorer && prediction.firstScorer === result.firstScorer && leaguePreds.length > 0) {
+  if (scorerHit && leaguePreds.length > 0) {
     const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
     if (scorerPicks / leaguePreds.length < 0.05) pts += 2
   }

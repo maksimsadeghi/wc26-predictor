@@ -7,7 +7,7 @@ function scorerPts() {
   return 4
 }
 
-export default function MatchCard({ match, leagueId, uid, myPrediction, allPredictions, result, squads }) {
+export default function MatchCard({ match, leagueId, uid, displayName, myPrediction, allPredictions, result, squads }) {
   const [homeScore,    setHomeScore]    = useState(myPrediction?.homeScore    ?? 0)
   const [awayScore,    setAwayScore]    = useState(myPrediction?.awayScore    ?? 0)
   const [firstTeam,    setFirstTeam]    = useState(myPrediction?.firstTeam    || null)
@@ -30,11 +30,20 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
   const persist = useCallback(
     debounce(async (pred) => {
       setSaving(true)
-      await savePrediction(leagueId, match.id, uid, pred)
+      await savePrediction(leagueId, match.id, uid, { ...pred, displayName })
       setSaving(false)
     }, DEBOUNCE_MS),
-    [leagueId, match.id, uid]
+    [leagueId, match.id, uid, displayName]
   )
+
+  // Auto-save 0-0 default so it counts as a submitted prediction
+  useEffect(() => {
+    if (!myPrediction && !isLocked) {
+      savePrediction(leagueId, match.id, uid, {
+        homeScore: 0, awayScore: 0, firstTeam: null, firstScorer: null, firstScorerPos: null, displayName,
+      })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function changeScore(side, delta) {
     if (lockState) return
@@ -129,7 +138,7 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
                 <span>⚡</span><span>First to score</span>
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                {firstTeam && <span style={{ fontSize: 11, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstTeam}</span>}
+                {firstTeam && <span style={{ fontSize: 11, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstTeam === 'NO_GOALS' ? 'No goals' : firstTeam}</span>}
                 <span style={{ fontSize: 10, color: 'var(--text-3)', display: 'inline-block', transform: openPanel === 'fts' ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>▾</span>
               </span>
             </button>
@@ -143,7 +152,7 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
           
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                {firstScorer && <span style={{ fontSize: 11, maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstScorer}</span>}
+                {firstScorer && <span style={{ fontSize: 11, maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstScorer === 'NO_SCORER' ? 'No scorer' : firstScorer}</span>}
                 <span style={{ fontSize: 10, color: 'var(--text-3)', display: 'inline-block', transform: openPanel === 'scorer' ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>▾</span>
               </span>
             </button>
@@ -162,6 +171,11 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
                     <span className="fts-tick">{firstTeam === team.name ? '✓ Selected' : ''}</span>
                   </button>
                 ))}
+                <button className={`fts-opt ${firstTeam === 'NO_GOALS' ? 'selected' : ''}`} onClick={() => pickFTS('NO_GOALS')} style={{ gridColumn: '1 / -1' }}>
+                  <span className="fts-flag" style={{ fontSize: 28 }}>🚫</span>
+                  <span className="fts-name">No goals</span>
+                  <span className="fts-tick">{firstTeam === 'NO_GOALS' ? '✓ Selected' : ''}</span>
+                </button>
               </div>
               <button className="drop-clear" onClick={() => pickFTS(null)}>✕ &nbsp;Clear pick</button>
             </div>
@@ -170,6 +184,13 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
           {openPanel === 'scorer' && (
             <div className="drop-panel">
               <div className="drop-header">Who scores first? · Position earns bonus pts</div>
+              <div className="player-grid" style={{ borderBottom: '0.5px solid var(--border)', marginBottom: 4 }}>
+                <button className={`player-row ${firstScorer === 'NO_SCORER' ? 'selected' : ''}`} onClick={() => pickScorer('NO_SCORER', null)}>
+                  <span className="player-pos">—</span>
+                  <span className="player-name">No first scorer</span>
+                  <span className="player-tick">{firstScorer === 'NO_SCORER' ? '✓' : ''}</span>
+                </button>
+              </div>
               {[{ team: match.home, players: homePlayers }, { team: match.away, players: awayPlayers }].map(({ team, players }, ti) => (
                 <div key={team.name}>
                   {ti > 0 && <div className="team-divider" />}
@@ -236,8 +257,8 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
                     const scoreColor = predBd
                       ? (predBd.exactBonus > 0 ? 'var(--green)' : predBd.result > 0 ? 'var(--amber)' : 'var(--text-3)')
                       : 'var(--text-1)'
-                    const ftsOk    = isPast && result && pred.firstTeam   === result.firstTeamScore
-                    const scorerOk = isPast && result && pred.firstScorer === result.firstScorer
+                    const ftsOk    = isPast && result && (pred.firstTeam === 'NO_GOALS' ? result.firstTeamScore == null : pred.firstTeam === result.firstTeamScore)
+                    const scorerOk = isPast && result && (pred.firstScorer === 'NO_SCORER' ? result.firstScorer == null : pred.firstScorer === result.firstScorer)
                     return (
                       <div key={pred.uid} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px 100px', gap: 8, padding: '8px 12px', borderBottom: '0.5px solid var(--border)', background: isMe ? 'var(--green-dim)' : 'transparent', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -246,8 +267,8 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
                           {predBd && predBd.total > 0 && <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 20, background: 'var(--green-dim)', color: 'var(--green)', fontWeight: 500 }}>+{predBd.total}</span>}
                         </div>
                         <div style={{ textAlign: 'center', fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 600, color: scoreColor }}>{pred.homeScore ?? '?'}–{pred.awayScore ?? '?'}</div>
-                        <div style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: ftsOk ? 'var(--amber)' : 'var(--text-2)' }}>{pred.firstTeam ? `⚡ ${pred.firstTeam}` : '—'}</div>
-                        <div style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: scorerOk ? 'var(--blue)' : 'var(--text-2)' }}>{pred.firstScorer ? `👕 ${pred.firstScorer}` : '—'}</div>
+                        <div style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: ftsOk ? 'var(--amber)' : 'var(--text-2)' }}>{pred.firstTeam ? `⚡ ${pred.firstTeam === 'NO_GOALS' ? 'No goals' : pred.firstTeam}` : '—'}</div>
+                        <div style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: scorerOk ? 'var(--blue)' : 'var(--text-2)' }}>{pred.firstScorer ? `👕 ${pred.firstScorer === 'NO_SCORER' ? 'No scorer' : pred.firstScorer}` : '—'}</div>
                       </div>
                     )
                   })}
@@ -267,8 +288,8 @@ export default function MatchCard({ match, leagueId, uid, myPrediction, allPredi
                     {homeScore} – {awayScore}
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>
-                    {firstTeam ? `⚡ ${firstTeam}` : '⚡ no pick'}<br />
-                    {firstScorer ? `👕 ${firstScorer} (${scorerPos})` : '👕 no pick'}
+                    {firstTeam ? `⚡ ${firstTeam === 'NO_GOALS' ? 'No goals' : firstTeam}` : '⚡ no pick'}<br />
+                    {firstScorer ? `👕 ${firstScorer === 'NO_SCORER' ? 'No scorer' : `${firstScorer} (${scorerPos})`}` : '👕 no pick'}
                   </div>
                 </div>
                 <div style={{ background: 'rgba(74,222,128,.05)', border: '.5px solid rgba(74,222,128,.15)', borderRadius: 8, padding: '8px 10px' }}>

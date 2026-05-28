@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { subscribeMyPredictions, subscribeResults, subscribeAllPredictions } from '../services/firestore'
-import { fetchMatches, fetchSquad } from '../services/apiFootball'
+import { subscribeMyPredictions, subscribeResults, subscribeAllPredictions, subscribeFixtures } from '../services/firestore'
+import { fetchSquad } from '../services/apiFootball'
 import MatchCard from '../components/MatchCard'
 
 export default function Predictions() {
@@ -18,9 +18,8 @@ export default function Predictions() {
   const [filter,   setFilter]   = useState('upcoming')
 
   useEffect(() => {
-    fetchMatches()
-      .then(ms => { setMatches(ms); setLoading(false) })
-      .catch(() => setLoading(false))
+    const unsub = subscribeFixtures(ms => { setMatches(ms); setLoading(false) })
+    return unsub
   }, [])
 
   useEffect(() => {
@@ -35,7 +34,7 @@ export default function Predictions() {
     const unsubPreds   = subscribeMyPredictions(leagueId, user.uid, setMyPreds)
     const unsubAll     = subscribeAllPredictions(leagueId, setAllPreds)
     const unsubResults = subscribeResults(setResults)
-    return () => { unsubPreds(); unsubResults() }
+    return () => { unsubPreds(); unsubAll(); unsubResults() }
   }, [leagueId, user.uid])
 
   const rounds = useMemo(() => {
@@ -47,9 +46,10 @@ export default function Predictions() {
     const now = Date.now()
     const filtered = matches.filter(m => {
       const t = new Date(m.date).getTime()
-      if (filter === 'upcoming') return t > now && m.status === 'NS'
-      if (filter === 'live')     return ['1H','2H','HT','ET','P'].includes(m.status)
-      if (filter === 'finished') return m.status === 'FT'
+      const status = results[m.id]?.status || m.status
+      if (filter === 'upcoming') return t > now && status === 'NS'
+      if (filter === 'live')     return ['1H','2H','HT','ET','P'].includes(status)
+      if (filter === 'finished') return status === 'FT'
       if (filter === 'all')      return true
       return m.round === filter
     })
@@ -127,6 +127,7 @@ export default function Predictions() {
               match={m}
               leagueId={leagueId}
               uid={user.uid}
+              displayName={user.displayName}
               myPrediction={myPreds[m.id]}
               allPredictions={allPreds[m.id] || []}
               result={results[m.id]}

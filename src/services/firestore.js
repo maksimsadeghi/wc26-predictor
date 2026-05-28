@@ -102,6 +102,12 @@ export async function saveResult(matchId, result) {
   }, { merge: true })
 }
 
+export function subscribeFixtures(cb) {
+  return onSnapshot(doc(db, '_cache', 'fixtures_13_2026'), snap => {
+    cb(snap.exists() ? (snap.data().matches || []) : [])
+  })
+}
+
 export function subscribeResults(cb) {
   return onSnapshot(collection(db, 'results'), snap => {
     const map = {}
@@ -140,10 +146,19 @@ export function calcPoints(prediction, result, leaguePreds = []) {
   if (prediction.homeScore === result.homeScore &&
       prediction.awayScore === result.awayScore) pts += 3          // exact score bonus
 
-  if (prediction.firstTeam && prediction.firstTeam === result.firstTeamScore) pts += 2
+  if (prediction.firstTeam) {
+    const ftsHit = prediction.firstTeam === 'NO_GOALS'
+      ? result.firstTeamScore == null
+      : prediction.firstTeam === result.firstTeamScore
+    if (ftsHit) pts += 2
+  }
 
-  if (prediction.firstScorer && prediction.firstScorer === result.firstScorer)
-    pts += scorerPts(result.firstScorerPos)
+  if (prediction.firstScorer) {
+    const scorerHit = prediction.firstScorer === 'NO_SCORER'
+      ? result.firstScorer == null
+      : prediction.firstScorer === result.firstScorer
+    if (scorerHit) pts += scorerPts(result.firstScorerPos)
+  }
 
   // Underdog bonus — scoreline
   if (prediction.homeScore === result.homeScore && prediction.awayScore === result.awayScore) {
@@ -153,11 +168,16 @@ export function calcPoints(prediction, result, leaguePreds = []) {
   }
 
   // Underdog bonus — first scorer
-  if (prediction.firstScorer && prediction.firstScorer === result.firstScorer) {
-    const total = leaguePreds.length
-    const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
-    if (total > 0 && scorerPicks / total < 0.05) pts += 2
-  } 
+  {
+    const underdogScorerHit = prediction.firstScorer && (prediction.firstScorer === 'NO_SCORER'
+      ? result.firstScorer == null
+      : prediction.firstScorer === result.firstScorer)
+    if (underdogScorerHit) {
+      const total = leaguePreds.length
+      const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
+      if (total > 0 && scorerPicks / total < 0.05) pts += 2
+    }
+  }
 
   return pts
 }
@@ -172,14 +192,20 @@ export function pointsBreakdown(prediction, result, leaguePreds = []) {
   const exactH = prediction.homeScore === result.homeScore
   const exactA = prediction.awayScore === result.awayScore
 
+  const ftsHit = prediction.firstTeam && (prediction.firstTeam === 'NO_GOALS'
+    ? result.firstTeamScore == null
+    : prediction.firstTeam === result.firstTeamScore)
+  const scorerHit = prediction.firstScorer && (prediction.firstScorer === 'NO_SCORER'
+    ? result.firstScorer == null
+    : prediction.firstScorer === result.firstScorer)
+
   const breakdown = {
     result:      pw === rw ? 4 : 0,
     homeGoal:    exactH ? 1 : 0,
     awayGoal:    exactA ? 1 : 0,
     exactBonus:  exactH && exactA ? 3 : 0,
-    firstTeam:   prediction.firstTeam && prediction.firstTeam === result.firstTeamScore ? 2 : 0,
-    firstScorer: prediction.firstScorer && prediction.firstScorer === result.firstScorer
-                   ? scorerPts(result.firstScorerPos) : 0,
+    firstTeam:   ftsHit ? 2 : 0,
+    firstScorer: scorerHit ? scorerPts(result.firstScorerPos) : 0,
     underdogScore:  0,
     underdogScorer: 0,
   }
@@ -191,7 +217,7 @@ export function pointsBreakdown(prediction, result, leaguePreds = []) {
   }
 
   // Underdog bonus — first scorer
-  if (prediction.firstScorer && prediction.firstScorer === result.firstScorer && leaguePreds.length > 0) {
+  if (scorerHit && leaguePreds.length > 0) {
     const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
     if (scorerPicks / leaguePreds.length < 0.05) breakdown.underdogScorer = 2
   }
