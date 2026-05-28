@@ -7,7 +7,7 @@ function scorerPts() {
   return 4
 }
 
-export default function MatchCard({ match, leagueId, uid, displayName, myPrediction, allPredictions, result, squads }) {
+export default function MatchCard({ match, leagueId, uid, displayName, myPrediction, allPredictions, result, squads, members = {} }) {
   const [homeScore,    setHomeScore]    = useState(myPrediction?.homeScore    ?? 0)
   const [awayScore,    setAwayScore]    = useState(myPrediction?.awayScore    ?? 0)
   const [firstTeam,    setFirstTeam]    = useState(myPrediction?.firstTeam    || null)
@@ -256,7 +256,8 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
                   {(allPredictions || []).map(pred => {
                     const isMe      = pred.uid === uid
                     const predBd    = isPast ? pointsBreakdown(pred, result) : null
-                    const initials  = pred.displayName?.split(' ').map(n => n[0]).join('').slice(0, 2) || '?'
+                    const name      = members[pred.uid] || pred.displayName || 'Unknown'
+                    const initials  = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
                     const scoreColor = predBd
                       ? (predBd.exactBonus > 0 ? 'var(--green)' : predBd.result > 0 ? 'var(--amber)' : 'var(--text-3)')
                       : 'var(--text-1)'
@@ -266,7 +267,7 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
                       <div key={pred.uid} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px 100px', gap: 8, padding: '8px 12px', borderBottom: '0.5px solid var(--border)', background: isMe ? 'var(--green-dim)' : 'transparent', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <div style={{ width: 22, height: 22, borderRadius: '50%', background: isMe ? 'var(--green)' : 'rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600, color: isMe ? 'var(--bg-0)' : 'var(--text-2)', flexShrink: 0 }}>{initials}</div>
-                          <span style={{ fontSize: 12, color: isMe ? 'var(--green)' : 'var(--text-1)', fontWeight: isMe ? 500 : 400 }}>{pred.displayName}{isMe ? ' (you)' : ''}</span>
+                          <span style={{ fontSize: 12, color: isMe ? 'var(--green)' : 'var(--text-1)', fontWeight: isMe ? 500 : 400 }}>{name}{isMe ? ' (you)' : ''}</span>
                           {predBd && predBd.total > 0 && <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 20, background: 'var(--green-dim)', color: 'var(--green)', fontWeight: 500 }}>+{predBd.total}</span>}
                         </div>
                         <div style={{ textAlign: 'center', fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 600, color: scoreColor }}>{pred.homeScore ?? '?'}–{pred.awayScore ?? '?'}</div>

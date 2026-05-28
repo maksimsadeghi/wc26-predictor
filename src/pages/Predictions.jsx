@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { subscribeMyPredictions, subscribeResults, subscribeAllPredictions, subscribeFixtures } from '../services/firestore'
+import { subscribeMyPredictions, subscribeResults, subscribeAllPredictions, subscribeFixtures, subscribeLeague } from '../services/firestore'
 import { fetchSquad } from '../services/apiFootball'
 import MatchCard from '../components/MatchCard'
 
@@ -14,6 +14,7 @@ export default function Predictions() {
   const [myPreds,  setMyPreds]  = useState({})
   const [allPreds, setAllPreds] = useState({})
   const [results,  setResults]  = useState({})
+  const [members,  setMembers]  = useState({})
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('upcoming')
 
@@ -34,7 +35,12 @@ export default function Predictions() {
     const unsubPreds   = subscribeMyPredictions(leagueId, user.uid, setMyPreds)
     const unsubAll     = subscribeAllPredictions(leagueId, setAllPreds)
     const unsubResults = subscribeResults(setResults)
-    return () => { unsubPreds(); unsubAll(); unsubResults() }
+    const unsubLeague  = subscribeLeague(leagueId, league => {
+      const map = {}
+      ;(league?.members || []).forEach(m => { map[m.uid] = m.displayName })
+      setMembers(map)
+    })
+    return () => { unsubPreds(); unsubAll(); unsubResults(); unsubLeague() }
   }, [leagueId, user.uid])
 
   const rounds = useMemo(() => {
@@ -134,6 +140,7 @@ export default function Predictions() {
               allPredictions={allPreds[m.id] || []}
               result={results[m.id]}
               squads={squads}
+              members={members}
             />
           ))}
         </div>
