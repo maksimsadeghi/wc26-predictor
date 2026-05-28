@@ -170,7 +170,7 @@ async function fetchPendingResults(matches) {
   const now      = Date.now()
   const finished = matches.filter(m => {
     const kickoff = new Date(m.date).getTime()
-    return kickoff < now - 2 * 60 * 60 * 1000  // kicked off more than 2 hours ago
+    return kickoff < now - 5 * 60 * 1000  // kicked off more than 5 minutes ago
   })
 
   let fetched = 0, skipped = 0, failed = 0
