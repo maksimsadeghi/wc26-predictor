@@ -10,6 +10,7 @@ export default function Rules() {
           <li>Predict the score of each match before it kicks off.</li>
           <li>Picks <strong style={{ color: 'var(--text-1)' }}>lock 30 minutes before kickoff</strong> — no changes made after that.</li>
           <li>You can also pick bonus questions: the first team to score and the first goalscorer.</li>
+          <li><strong style={{ color: 'var(--text-1)' }}>Picks are auto-saved</strong> as you type — no submit button needed.</li>
           <li>If you don't submit a pick before kickoff, you get 0 points for that match.</li>
           <li>Extra time goals count toward your score prediction. Penalty shootouts do not.</li>
         </ul>
