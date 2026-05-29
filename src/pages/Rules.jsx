@@ -7,8 +7,8 @@ export default function Rules() {
       <div className="card" style={{ marginBottom: 16, padding: '20px 24px' }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>📋 The Basics</h2>
         <ul style={{ paddingLeft: 18, color: 'var(--text-2)', lineHeight: 2, fontSize: 14 }}>
-          <li>Predict the score of each match 30 minutes before it kicks off.</li>
-          <li>Picks <strong style={{ color: 'var(--text-1)' }}>lock at kickoff</strong> — no changes once the game starts.</li>
+          <li>Predict the score of each match before it kicks off.</li>
+          <li>Picks <strong style={{ color: 'var(--text-1)' }}>lock 30 minutes before kickoff</strong> — no changes made after that.</li>
           <li>You can also pick bonus questions: the first team to score and the first goalscorer.</li>
           <li>If you don't submit a pick before kickoff, you get 0 points for that match.</li>
           <li>Extra time goals count toward your score prediction. Penalty shootouts do not.</li>
@@ -25,7 +25,6 @@ export default function Rules() {
           <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
           <Row label="First team to score" pts="+2 pts" color="var(--amber)" />
           <Row label="First goalscorer — outfield player" pts="+4 pts" color="var(--blue)" />
-          <Row label="First goalscorer — goalkeeper / defender" pts="+6 pts" color="var(--blue)" note="bonus for rare scorers" />
         </div>
       </div>
 
@@ -36,7 +35,7 @@ export default function Rules() {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <Row
-            label="Rare scoreline — fewer than 15% of your league picked the same exact score"
+            label="Rare scoreline — fewer than 5% of your league picked the same exact score"
             pts="+2 pts"
             color="var(--amber)"
           />

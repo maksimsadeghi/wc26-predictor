@@ -347,7 +347,7 @@ function calcPointsAdmin(prediction, result, leaguePreds = []) {
   if (scorerHit) pts += 4
   if (prediction.homeScore === result.homeScore && prediction.awayScore === result.awayScore && leaguePreds.length > 0) {
     const scorePicks = leaguePreds.filter(p => p.homeScore === prediction.homeScore && p.awayScore === prediction.awayScore).length
-    if (scorePicks / leaguePreds.length < 0.15) pts += 2
+    if (scorePicks / leaguePreds.length < 0.05) pts += 2
   }
   if (scorerHit && leaguePreds.length > 0) {
     const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length

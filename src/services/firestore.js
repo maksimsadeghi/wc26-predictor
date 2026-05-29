@@ -164,7 +164,7 @@ export function calcPoints(prediction, result, leaguePreds = []) {
   if (prediction.homeScore === result.homeScore && prediction.awayScore === result.awayScore) {
     const total = leaguePreds.length
     const scorePicks = leaguePreds.filter(p => p.homeScore === prediction.homeScore && p.awayScore === prediction.awayScore).length
-    if (total > 0 && scorePicks / total < 0.15) pts += 2
+    if (total > 0 && scorePicks / total < 0.05) pts += 2
   }
 
   // Underdog bonus — first scorer
@@ -213,7 +213,7 @@ export function pointsBreakdown(prediction, result, leaguePreds = []) {
   // Underdog bonus — scoreline
   if (exactH && exactA && leaguePreds.length > 0) {
     const scorePicks = leaguePreds.filter(p => p.homeScore === prediction.homeScore && p.awayScore === prediction.awayScore).length
-    if (scorePicks / leaguePreds.length < 0.15) breakdown.underdogScore = 2
+    if (scorePicks / leaguePreds.length < 0.05) breakdown.underdogScore = 2
   }
 
   // Underdog bonus — first scorer
