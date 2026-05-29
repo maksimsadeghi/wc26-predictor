@@ -63,7 +63,6 @@ export default function Rules() {
         <ul style={{ paddingLeft: 18, color: 'var(--text-2)', lineHeight: 2, fontSize: 14 }}>
           <li><strong style={{ color: 'var(--text-1)' }}>No goals</strong> — pick this if you think neither team will score first (0–0 game). Earns the first team bonus if correct.</li>
           <li><strong style={{ color: 'var(--text-1)' }}>No scorer</strong> — pick this if you think no one scores (0–0). Earns the first scorer bonus if correct.</li>
-          <li>A default pick of 0–0 with no bonus selections is automatically saved when you open a match — you can always change it before kickoff.</li>
         </ul>
       </div>
     </div>
