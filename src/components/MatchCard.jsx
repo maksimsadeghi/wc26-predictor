@@ -385,11 +385,11 @@ function Tag({ color, children }) {
 
 function TeamSide({ team, right }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1,, flexDirection: right ? 'row-reverse' : 'row', minWidth: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, flexDirection: right ? 'row-reverse' : 'row', minWidth: 0 }}>
       {team.logo
         ? <img src={team.logo} alt={team.name} style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }} />
         : <span style={{ fontSize: 22, flexShrink: 0 }}>🏳️</span>}
-      <span style={{ fontSize: 13, fontWeight: 500, whiteSpace: 'normal', lineHeight: 1.3, textAlign: right ? 'right' : 'left' }}>
+      <span style={{ fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: right ? 'right' : 'left' }}>
         {team.name}
       </span>
     </div>

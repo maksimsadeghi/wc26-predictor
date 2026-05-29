@@ -122,9 +122,6 @@ html, body, #root {
 
 /* ── Page ─────────────────────────────────────────────────────────────── */
 .page { max-width: 760px; margin: 0 auto; padding: 24px 20px 80px; width: 100%; }
-@media (max-width: 480px) {
-  .page { padding: 24px 8px 80px; }
-}
 .page-title {
   font-family: var(--font-head);
   font-size: 28px;
