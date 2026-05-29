@@ -28,6 +28,7 @@ export default function App() {
         <Route path="/league/:leagueId/predictions" element={<Protected><Predictions /></Protected>} />
         <Route path="/league/:leagueId/leaderboard" element={<Protected><Leaderboard /></Protected>} />
         <Route path="/league/:leagueId/rules" element={<Protected><Rules /></Protected>} />
+        <Route path="/rules" element={<Protected><Rules /></Protected>} />
         <Route path="/admin" element={<Protected><Admin /></Protected>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />

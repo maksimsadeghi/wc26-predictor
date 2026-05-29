@@ -14,22 +14,24 @@ export default function Nav() {
         🏆 WC26
       </NavLink>
 
-      {leagueId && (
-        <div className="nav-links">
-          <NavLink to={`/league/${leagueId}/predictions`} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            Predictions
-          </NavLink>
-          <NavLink to={`/league/${leagueId}/leaderboard`} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            Leaderboard
-          </NavLink>
-          <NavLink to={`/league/${leagueId}`} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            My League
-          </NavLink>
-          <NavLink to={`/league/${leagueId}/rules`} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            Rules
-          </NavLink>
-        </div>
-      )}
+      <div className="nav-links">
+        {leagueId && (
+          <>
+            <NavLink to={`/league/${leagueId}/predictions`} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
+              Predictions
+            </NavLink>
+            <NavLink to={`/league/${leagueId}/leaderboard`} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
+              Leaderboard
+            </NavLink>
+            <NavLink to={`/league/${leagueId}`} end className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
+              My League
+            </NavLink>
+          </>
+        )}
+        <NavLink to="/rules" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
+          Rules
+        </NavLink>
+      </div>
 
       <div className="nav-user">
         <span className="muted text-sm">{user?.displayName}</span>
