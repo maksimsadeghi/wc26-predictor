@@ -315,6 +315,14 @@ async function recalcAllLeagues() {
       const pts = calcPointsAdmin(pred, result, leaguePreds)
       if (!totals[pred.uid]) totals[pred.uid] = { uid: pred.uid, total: 0, exact: 0, correct: 0, scorerHits: 0 }
       totals[pred.uid].total += pts
+      const exactH = pred.homeScore === result.homeScore
+      const exactA = pred.awayScore === result.awayScore
+      const pw = Math.sign(pred.homeScore - pred.awayScore)
+      const rw = Math.sign(result.homeScore - result.awayScore)
+      if (exactH && exactA) totals[pred.uid].exact++
+      else if (pw === rw) totals[pred.uid].correct++
+      const scorerHit = pred.firstScorer && (pred.firstScorer === 'NO_SCORER' ? result.firstScorer == null : pred.firstScorer === result.firstScorer)
+      if (scorerHit) totals[pred.uid].scorerHits++
     })
     const members = leagueDoc.data()?.members || []
     const memberMap = {}
