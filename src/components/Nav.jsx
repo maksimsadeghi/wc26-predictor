@@ -23,6 +23,9 @@ export default function Nav() {
           <NavLink to={`/league/${leagueId}`} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
             My League
           </NavLink>
+          <NavLink to={`/league/${leagueId}/rules`} className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
+            Rules
+          </NavLink>
         </div>
       )}
 

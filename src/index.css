@@ -7,12 +7,14 @@
   --bg-card:   #0d1b32;
   --border:    rgba(255,255,255,0.07);
   --border-hi: rgba(255,255,255,0.14);
-  --green:     #4ade80;
-  --green-dim: rgba(74,222,128,0.12);
-  --amber:     #fbbf24;
-  --amber-dim: rgba(251,191,36,0.12);
-  --blue:      #60a5fa;
-  --blue-dim:  rgba(96,165,250,0.12);
+  --green:      #4ade80;
+  --green-dim:  rgba(74,222,128,0.12);
+  --amber:      #fbbf24;
+  --amber-dim:  rgba(251,191,36,0.12);
+  --blue:       #60a5fa;
+  --blue-dim:   rgba(96,165,250,0.12);
+  --purple:     #a78bfa;
+  --purple-dim: rgba(167,139,250,0.12);
   --text-1:    #f0f4ff;
   --text-2:    rgba(240,244,255,0.55);
   --text-3:    rgba(240,244,255,0.28);
@@ -231,8 +233,9 @@ html, body, #root {
   text-align: left;
 }
 .bonus-trigger:hover { border-color: var(--border-hi); color: var(--text-1); }
-.bonus-trigger.amber-pick { border-color: var(--amber); background: var(--amber-dim); color: var(--amber); }
-.bonus-trigger.blue-pick  { border-color: var(--blue);  background: var(--blue-dim);  color: var(--blue); }
+.bonus-trigger.amber-pick  { border-color: var(--amber);  background: var(--amber-dim);  color: var(--amber); }
+.bonus-trigger.blue-pick   { border-color: var(--blue);   background: var(--blue-dim);   color: var(--blue); }
+.bonus-trigger.purple-pick { border-color: var(--purple); background: var(--purple-dim); color: var(--purple); }
 
 /* ── Dropdown panel ───────────────────────────────────────────────────── */
 .drop-panel {
@@ -398,9 +401,10 @@ html, body, #root {
   border-radius: 20px;
   letter-spacing: 0.5px;
 }
-.badge-green  { background: var(--green-dim); color: var(--green); }
-.badge-amber  { background: var(--amber-dim); color: var(--amber); }
-.badge-blue   { background: var(--blue-dim);  color: var(--blue); }
+.badge-green  { background: var(--green-dim);  color: var(--green); }
+.badge-amber  { background: var(--amber-dim);  color: var(--amber); }
+.badge-blue   { background: var(--blue-dim);   color: var(--blue); }
+.badge-purple { background: var(--purple-dim); color: var(--purple); }
 .badge-gray   { background: rgba(255,255,255,0.08); color: var(--text-2); }
 
 /* ── Loading spinner ──────────────────────────────────────────────────── */
