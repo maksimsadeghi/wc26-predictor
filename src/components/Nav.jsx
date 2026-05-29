@@ -1,9 +1,11 @@
-import { NavLink, useParams } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function Nav() {
   const { user, logout } = useAuth()
-  const { leagueId }     = useParams()
+  const location = useLocation()
+  const leagueMatch = location.pathname.match(/\/league\/([^/]+)/)
+  const leagueId = leagueMatch ? leagueMatch[1] : null
   const initials = user?.displayName?.split(' ').map(n => n[0]).join('').slice(0,2) || '?'
 
   return (
