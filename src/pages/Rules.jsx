@@ -48,17 +48,6 @@ export default function Rules() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 16, padding: '20px 24px', border: '0.5px solid var(--purple)', background: 'var(--purple-dim)' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, color: 'var(--purple)' }}>⚡ 2× Double Booster</h2>
-        <ul style={{ paddingLeft: 18, color: 'var(--text-2)', lineHeight: 2, fontSize: 14 }}>
-          <li>You get <strong style={{ color: 'var(--text-1)' }}>one booster per stage</strong> (each group matchday, Round of 32, Round of 16, QF, SF, Final).</li>
-          <li>Apply it to any one match in that stage — all points for that match are <strong style={{ color: 'var(--purple)' }}>multiplied by 2</strong>.</li>
-          <li>You can move the booster to a different match anytime <strong style={{ color: 'var(--text-1)' }}>before that match locks</strong>.</li>
-          <li>If you don't use it before every match in that stage kicks off, <strong style={{ color: 'var(--text-1)' }}>it's gone</strong> — it does not carry over.</li>
-          <li>Boosters cannot stack — only one match per stage can be doubled.</li>
-        </ul>
-      </div>
-
       <div className="card" style={{ padding: '20px 24px' }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>⚙️ Special Picks</h2>
         <ul style={{ paddingLeft: 18, color: 'var(--text-2)', lineHeight: 2, fontSize: 14 }}>

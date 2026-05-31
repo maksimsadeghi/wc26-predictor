@@ -361,6 +361,6 @@ function calcPointsAdmin(prediction, result, leaguePreds = []) {
     const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
     if (scorerPicks / leaguePreds.length < 0.05) pts += 2
   }
-  return prediction.isBooster ? pts * 2 : pts
+  return pts
 }
 main()

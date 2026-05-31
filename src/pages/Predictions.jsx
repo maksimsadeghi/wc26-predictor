@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { subscribeMyPredictions, subscribeResults, subscribeAllPredictions, subscribeFixtures, subscribeLeague, savePrediction } from '../services/firestore'
+import { subscribeMyPredictions, subscribeResults, subscribeAllPredictions, subscribeFixtures, subscribeLeague } from '../services/firestore'
 import { fetchSquad } from '../services/apiFootball'
 import MatchCard from '../components/MatchCard'
 
@@ -47,25 +47,6 @@ export default function Predictions() {
     const unique = [...new Set(matches.map(m => m.round))]
     return unique.sort()
   }, [matches])
-
-  // Track which match (if any) has the booster active per round
-  const boosterByRound = useMemo(() => {
-    const map = {}
-    matches.forEach(m => {
-      if (myPreds[m.id]?.isBooster) map[m.round] = m.id
-    })
-    return map
-  }, [myPreds, matches])
-
-  async function handleBoosterToggle(matchId, round, enabled) {
-    if (enabled) {
-      const existingMatchId = boosterByRound[round]
-      if (existingMatchId && existingMatchId !== matchId) {
-        await savePrediction(leagueId, existingMatchId, user.uid, { isBooster: false })
-      }
-    }
-    await savePrediction(leagueId, matchId, user.uid, { isBooster: enabled })
-  }
 
   const grouped = useMemo(() => {
     const now = Date.now()
@@ -160,8 +141,6 @@ export default function Predictions() {
               result={results[m.id]}
               squads={squads}
               members={members}
-              boosterMatchId={boosterByRound[m.round] || null}
-              onBoosterToggle={handleBoosterToggle}
             />
           ))}
         </div>

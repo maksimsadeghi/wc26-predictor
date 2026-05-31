@@ -179,7 +179,7 @@ export function calcPoints(prediction, result, leaguePreds = []) {
     }
   }
 
-  return prediction.isBooster ? pts * 2 : pts
+  return pts
 }
 
 // Breakdown for showing on the UI (how many points came from each component)
@@ -222,9 +222,7 @@ export function pointsBreakdown(prediction, result, leaguePreds = []) {
     if (scorerPicks / leaguePreds.length < 0.05) breakdown.underdogScorer = 2
   }
 
-  const baseTotal = Object.values(breakdown).reduce((a, b) => a + b, 0)
-  breakdown.boosterActive = !!prediction.isBooster
-  breakdown.total = prediction.isBooster ? baseTotal * 2 : baseTotal
+  breakdown.total = Object.values(breakdown).reduce((a, b) => a + b, 0)
   return breakdown
 }
 

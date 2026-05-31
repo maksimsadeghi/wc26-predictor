@@ -7,19 +7,14 @@ function scorerPts() {
   return 4
 }
 
-export default function MatchCard({ match, leagueId, uid, displayName, myPrediction, allPredictions, result, squads, members = {}, boosterMatchId = null, onBoosterToggle }) {
+export default function MatchCard({ match, leagueId, uid, displayName, myPrediction, allPredictions, result, squads, members = {} }) {
   const [homeScore,    setHomeScore]    = useState(myPrediction?.homeScore    ?? 0)
   const [awayScore,    setAwayScore]    = useState(myPrediction?.awayScore    ?? 0)
   const [firstTeam,    setFirstTeam]    = useState(myPrediction?.firstTeam    || null)
   const [firstScorer,  setFirstScorer]  = useState(myPrediction?.firstScorer  || null)
   const [scorerPos,    setScorerPos]    = useState(myPrediction?.firstScorerPos || null)
-  const [isBooster,    setIsBooster]    = useState(myPrediction?.isBooster    ?? false)
   const [openPanel,    setOpenPanel]    = useState(null)
   const [saving,       setSaving]       = useState(false)
-
-  useEffect(() => {
-    setIsBooster(myPrediction?.isBooster ?? false)
-  }, [myPrediction?.isBooster])
 
   const DONE_STATUSES = ['FT', 'AET', 'PEN', 'AWD', 'WO']
   const msSinceKickoff = Date.now() - new Date(match.date).getTime()
@@ -85,7 +80,7 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
   const timeStr     = matchDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 
   const bd = isPast && myPrediction ? pointsBreakdown(
-    { homeScore, awayScore, firstTeam, firstScorer, isBooster: myPrediction?.isBooster },
+    { homeScore, awayScore, firstTeam, firstScorer },
     result,
     allPredictions || []
   ) : null
@@ -99,9 +94,6 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {saving && <span style={{ fontSize: 10, color: 'var(--text-3)' }}>saving…</span>}
-          {myPrediction?.isBooster && (isLiveBadge || isPast) && (
-            <span className="badge badge-purple">⚡ 2×</span>
-          )}
           {isPast && bd && (
             <span style={{
               fontFamily: 'var(--font-head)', fontSize: 14, fontWeight: 600, padding: '2px 10px',
@@ -168,31 +160,6 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
               </span>
             </button>
           </div>
-
-          {/* Booster toggle */}
-          {(() => {
-            const boosterUsedElsewhere = !!(boosterMatchId && boosterMatchId !== match.id)
-            return (
-              <button
-                className={`bonus-trigger ${isBooster ? 'purple-pick' : ''}`}
-                style={{ marginTop: 6, opacity: boosterUsedElsewhere ? 0.55 : 1 }}
-                onClick={() => {
-                  const next = !isBooster
-                  setIsBooster(next)
-                  onBoosterToggle?.(match.id, match.round, next)
-                }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span>⚡</span>
-                  <span>2× Double Booster</span>
-                  {isBooster && <span className="badge badge-purple" style={{ fontSize: 9, padding: '1px 6px' }}>ACTIVE</span>}
-                </span>
-                <span style={{ fontSize: 11, color: isBooster ? 'var(--purple)' : 'var(--text-3)' }}>
-                  {isBooster ? 'tap to remove' : boosterUsedElsewhere ? '⚠ used on other match' : '1 per round'}
-                </span>
-              </button>
-            )
-          })()}
 
           {openPanel === 'fts' && (
             <div className="drop-panel">
@@ -357,7 +324,6 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
                   {bd.total === 0     && <Tag color="gray">no points this match</Tag>}
                   {bd.underdogScore  > 0 && <Tag color="amber">+{bd.underdogScore} underdog score 🐉</Tag>}
                   {bd.underdogScorer > 0 && <Tag color="amber">+{bd.underdogScorer} underdog scorer 🐉</Tag>}
-                  {bd.boosterActive       && <Tag color="purple">⚡ 2× booster = {bd.total} pts</Tag>}
                 </div>
               )}
             </div>
