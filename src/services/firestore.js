@@ -129,9 +129,13 @@ export function subscribeLeaderboard(leagueId, cb) {
 
 // ── Scoring engine ─────────────────────────────────────────────────────────
 
+function normName(n) {
+  return n ? n.normalize('NFC').trim() : n
+}
+
 // Points for a correct first goalscorer
 function scorerPts() {
-  return 4                                                       
+  return 4
 }
 
 export function calcPoints(prediction, result, leaguePreds = []) {
@@ -156,7 +160,7 @@ export function calcPoints(prediction, result, leaguePreds = []) {
   if (prediction.firstScorer) {
     const scorerHit = prediction.firstScorer === 'NO_SCORER'
       ? result.firstScorer == null
-      : prediction.firstScorer === result.firstScorer
+      : normName(prediction.firstScorer) === normName(result.firstScorer)
     if (scorerHit) pts += scorerPts(result.firstScorerPos)
   }
 
@@ -171,10 +175,10 @@ export function calcPoints(prediction, result, leaguePreds = []) {
   {
     const underdogScorerHit = prediction.firstScorer && (prediction.firstScorer === 'NO_SCORER'
       ? result.firstScorer == null
-      : prediction.firstScorer === result.firstScorer)
+      : normName(prediction.firstScorer) === normName(result.firstScorer))
     if (underdogScorerHit) {
       const total = leaguePreds.length
-      const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
+      const scorerPicks = leaguePreds.filter(p => normName(p.firstScorer) === normName(prediction.firstScorer)).length
       if (total > 0 && scorerPicks / total < 0.05) pts += 2
     }
   }
@@ -197,7 +201,7 @@ export function pointsBreakdown(prediction, result, leaguePreds = []) {
     : prediction.firstTeam === result.firstTeamScore)
   const scorerHit = prediction.firstScorer && (prediction.firstScorer === 'NO_SCORER'
     ? result.firstScorer == null
-    : prediction.firstScorer === result.firstScorer)
+    : normName(prediction.firstScorer) === normName(result.firstScorer))
 
   const breakdown = {
     result:      pw === rw ? 4 : 0,
@@ -218,7 +222,7 @@ export function pointsBreakdown(prediction, result, leaguePreds = []) {
 
   // Underdog bonus — first scorer
   if (scorerHit && leaguePreds.length > 0) {
-    const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
+    const scorerPicks = leaguePreds.filter(p => normName(p.firstScorer) === normName(prediction.firstScorer)).length
     if (scorerPicks / leaguePreds.length < 0.05) breakdown.underdogScorer = 2
   }
 

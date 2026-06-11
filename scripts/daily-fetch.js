@@ -321,7 +321,7 @@ async function recalcAllLeagues() {
       const rw = Math.sign(result.homeScore - result.awayScore)
       if (exactH && exactA) totals[pred.uid].exact++
       else if (pw === rw) totals[pred.uid].correct++
-      const scorerHit = pred.firstScorer && (pred.firstScorer === 'NO_SCORER' ? result.firstScorer == null : pred.firstScorer === result.firstScorer)
+      const scorerHit = pred.firstScorer && (pred.firstScorer === 'NO_SCORER' ? result.firstScorer == null : normName(pred.firstScorer) === normName(result.firstScorer))
       if (scorerHit) totals[pred.uid].scorerHits++
     })
     const members = leagueDoc.data()?.members || []
@@ -338,6 +338,10 @@ async function recalcAllLeagues() {
   }
 }
 
+function normName(n) {
+  return n ? n.normalize('NFC').trim() : n
+}
+
 function calcPointsAdmin(prediction, result, leaguePreds = []) {
   if (!prediction || !result || result.homeScore == null) return 0
   let pts = 0
@@ -351,14 +355,14 @@ function calcPointsAdmin(prediction, result, leaguePreds = []) {
     const ftsHit = prediction.firstTeam === 'NO_GOALS' ? result.firstTeamScore == null : prediction.firstTeam === result.firstTeamScore
     if (ftsHit) pts += 2
   }
-  const scorerHit = prediction.firstScorer && (prediction.firstScorer === 'NO_SCORER' ? result.firstScorer == null : prediction.firstScorer === result.firstScorer)
+  const scorerHit = prediction.firstScorer && (prediction.firstScorer === 'NO_SCORER' ? result.firstScorer == null : normName(prediction.firstScorer) === normName(result.firstScorer))
   if (scorerHit) pts += 4
   if (prediction.homeScore === result.homeScore && prediction.awayScore === result.awayScore && leaguePreds.length > 0) {
     const scorePicks = leaguePreds.filter(p => p.homeScore === prediction.homeScore && p.awayScore === prediction.awayScore).length
     if (scorePicks / leaguePreds.length < 0.05) pts += 2
   }
   if (scorerHit && leaguePreds.length > 0) {
-    const scorerPicks = leaguePreds.filter(p => p.firstScorer === prediction.firstScorer).length
+    const scorerPicks = leaguePreds.filter(p => normName(p.firstScorer) === normName(prediction.firstScorer)).length
     if (scorerPicks / leaguePreds.length < 0.05) pts += 2
   }
   return pts
