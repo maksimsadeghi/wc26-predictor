@@ -7,6 +7,15 @@ function scorerPts() {
   return 4
 }
 
+function normName(n) {
+  if (!n) return n
+  return n.normalize('NFC')
+    .replace(/[​‌‍﻿­]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
 export default function MatchCard({ match, leagueId, uid, displayName, myPrediction, allPredictions, result, squads, members = {} }) {
   const [homeScore,    setHomeScore]    = useState(myPrediction?.homeScore    ?? 0)
   const [awayScore,    setAwayScore]    = useState(myPrediction?.awayScore    ?? 0)
@@ -262,7 +271,7 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
                       ? (predBd.exactBonus > 0 ? 'var(--green)' : predBd.result > 0 ? 'var(--amber)' : 'var(--text-3)')
                       : 'var(--text-1)'
                     const ftsOk    = isPast && result && (pred.firstTeam === 'NO_GOALS' ? result.firstTeamScore == null : pred.firstTeam === result.firstTeamScore)
-                    const scorerOk = isPast && result && (pred.firstScorer === 'NO_SCORER' ? result.firstScorer == null : pred.firstScorer === result.firstScorer)
+                    const scorerOk = isPast && result && (pred.firstScorer === 'NO_SCORER' ? result.firstScorer == null : normName(pred.firstScorer) === normName(result.firstScorer))
                     return (
                       <div key={pred.uid} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px 100px', gap: 8, padding: '8px 12px', borderBottom: '0.5px solid var(--border)', background: isMe ? 'var(--green-dim)' : 'transparent', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

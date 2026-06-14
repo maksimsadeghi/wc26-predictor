@@ -130,7 +130,12 @@ export function subscribeLeaderboard(leagueId, cb) {
 // ── Scoring engine ─────────────────────────────────────────────────────────
 
 function normName(n) {
-  return n ? n.normalize('NFC').trim() : n
+  if (!n) return n
+  return n.normalize('NFC')
+    .replace(/[​‌‍﻿­]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
 }
 
 // Points for a correct first goalscorer

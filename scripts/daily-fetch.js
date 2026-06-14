@@ -339,7 +339,12 @@ async function recalcAllLeagues() {
 }
 
 function normName(n) {
-  return n ? n.normalize('NFC').trim() : n
+  if (!n) return n
+  return n.normalize('NFC')
+    .replace(/[​-‍﻿­]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
 }
 
 function calcPointsAdmin(prediction, result, leaguePreds = []) {
