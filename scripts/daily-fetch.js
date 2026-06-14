@@ -341,7 +341,7 @@ async function recalcAllLeagues() {
 function normName(n) {
   if (!n) return n
   return n.normalize('NFC')
-    .replace(/[​-‍﻿­]/g, '')
+    .replace(/\p{Cf}/gu, '')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase()
