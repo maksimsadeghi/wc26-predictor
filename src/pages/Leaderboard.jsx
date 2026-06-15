@@ -50,14 +50,22 @@ useEffect(() => {
       
       const results = {}
       resultsSnap.docs.forEach(d => { results[d.data().matchId] = d.data() })
+      
+      const predsByMatch = {}
+      predsSnap.docs.forEach(d => {
+        const data = d.data()
+        if (!predsByMatch[data.matchId]) predsByMatch[data.matchId] = []
+        predsByMatch[data.matchId].push(data)
+      })
+
       const totals = {}
       predsSnap.docs.forEach(d => {
         const pred = d.data()
         if (!roundMatchIds.has(pred.matchId)) return
-        const pts = calcPoints(pred, results[pred.matchId])
+        const pts = calcPoints(pred, results[pred.matchId], predsByMatch[pred.matchId] || [])
         if (!totals[pred.uid]) totals[pred.uid] = { uid: pred.uid, total: 0, exact: 0, correct: 0, scorerHits: 0 }
         totals[pred.uid].total += pts
-        const bd = pointsBreakdown(pred, results[pred.matchId])
+        const bd = pointsBreakdown(pred, results[pred.matchId], predsByMatch[pred.matchId] || [])
         if (bd.exactBonus > 0)  totals[pred.uid].exact++
         else if (bd.result > 0) totals[pred.uid].correct++
         if (bd.firstScorer > 0) totals[pred.uid].scorerHits++
