@@ -31,14 +31,14 @@ async function apiFetch(path) {
 // ── Fixtures ───────────────────────────────────────────────────────────────
 
 export async function fetchMatches() {
-  // 1. Check Firestore cache
-  const cacheRef = doc(db, '_cache', 'fixtures_1_2026') 
+  // Read from the same cache that daily-fetch.js maintains (refreshed every 6h)
+  const cacheRef = doc(db, '_cache', 'fixtures_13_2026')
   const cached   = await getDoc(cacheRef)
   if (cached.exists()) return cached.data().matches
 
-  // 2. First time only — hit the API and store
+  // Fallback: hit the API directly if cache is missing
   console.log('[API-Football] Fetching fixtures (1 request)')
-  const data    = await apiFetch('/fixtures?league=1&season=2026') 
+  const data    = await apiFetch('/fixtures?league=1&season=2026')
   const matches = data.response.map(normaliseMatch)
   await setDoc(cacheRef, { matches, fetchedAt: serverTimestamp() })
   return matches
