@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { savePrediction, pointsBreakdown } from '../services/firestore'
+import { savePrediction, pointsBreakdown, roundMultiplier } from '../services/firestore'
 
 const DEBOUNCE_MS = 800
 
@@ -88,10 +88,13 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
   const matchDate   = new Date(match.date)
   const timeStr     = matchDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 
+  const isDoublePoints = roundMultiplier(match.round) > 1
+
   const bd = isPast && myPrediction ? pointsBreakdown(
     { homeScore, awayScore, firstTeam, firstScorer },
     result,
-    allPredictions || []
+    allPredictions || [],
+    match.round
   ) : null
 
   return (
@@ -102,6 +105,14 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
           {match.round} &nbsp;·&nbsp; {timeStr} &nbsp;·&nbsp; {match.venue}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isDoublePoints && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+              background: 'rgba(250,204,21,.15)', color: '#facc15', letterSpacing: '.5px',
+            }}>
+              ✦ 2× pts
+            </span>
+          )}
           {saving && <span style={{ fontSize: 10, color: 'var(--text-3)' }}>saving…</span>}
           {isPast && bd && (
             <span style={{
@@ -264,7 +275,7 @@ export default function MatchCard({ match, leagueId, uid, displayName, myPredict
                   </div>
                   {(allPredictions || []).map(pred => {
                     const isMe      = pred.uid === uid
-                    const predBd    = isPast ? pointsBreakdown(pred, result) : null
+                    const predBd    = isPast ? pointsBreakdown(pred, result, [], match.round) : null
                     const name      = members[pred.uid] || pred.displayName || 'Unknown'
                     const initials  = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
                     const scoreColor = predBd

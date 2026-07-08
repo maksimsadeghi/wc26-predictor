@@ -138,12 +138,19 @@ function normName(n) {
     .toLowerCase()
 }
 
+// QF, SF, 3rd place, and Final are worth double points
+export function roundMultiplier(round) {
+  if (!round) return 1
+  const r = round.toLowerCase()
+  return (r.includes('quarter') || r.includes('semi') || r.includes('final') || r.includes('3rd')) ? 2 : 1
+}
+
 // Points for a correct first goalscorer
 function scorerPts() {
   return 4
 }
 
-export function calcPoints(prediction, result, leaguePreds = []) {
+export function calcPoints(prediction, result, leaguePreds = [], round = null) {
   if (!prediction || !result || result.homeScore == null) return 0
   let pts = 0
   const pw = Math.sign(prediction.homeScore - prediction.awayScore)
@@ -188,11 +195,11 @@ export function calcPoints(prediction, result, leaguePreds = []) {
     }
   }
 
-  return pts
+  return pts * roundMultiplier(round)
 }
 
 // Breakdown for showing on the UI (how many points came from each component)
-export function pointsBreakdown(prediction, result, leaguePreds = []) {
+export function pointsBreakdown(prediction, result, leaguePreds = [], round = null) {
   if (!prediction || !result || result.homeScore == null)
     return { result: 0, homeGoal: 0, awayGoal: 0, exactBonus: 0, firstTeam: 0, firstScorer: 0, total: 0 }
 
@@ -231,19 +238,32 @@ export function pointsBreakdown(prediction, result, leaguePreds = []) {
     if (scorerPicks / leaguePreds.length < 0.05) breakdown.underdogScorer = 2
   }
 
-  breakdown.total = Object.values(breakdown).reduce((a, b) => a + b, 0)
+  // Apply round multiplier to all components
+  const mult = roundMultiplier(round)
+  if (mult !== 1) {
+    for (const k of ['result', 'homeGoal', 'awayGoal', 'exactBonus', 'firstTeam', 'firstScorer', 'underdogScore', 'underdogScorer']) {
+      breakdown[k] *= mult
+    }
+  }
+
+  breakdown.total = breakdown.result + breakdown.homeGoal + breakdown.awayGoal + breakdown.exactBonus + breakdown.firstTeam + breakdown.firstScorer + breakdown.underdogScore + breakdown.underdogScorer
   return breakdown
 }
 
 export async function recalcLeaderboard(leagueId) {
-  const [predsSnap, resultsSnap, leagueSnap] = await Promise.all([
+  const [predsSnap, resultsSnap, leagueSnap, fixturesSnap] = await Promise.all([
     getDocs(query(collection(db, 'predictions'), where('leagueId', '==', leagueId))),
     getDocs(collection(db, 'results')),
     getDoc(doc(db, 'leagues', leagueId)),
+    getDoc(doc(db, '_cache', 'fixtures_13_2026')),
   ])
 
   const results = {}
   resultsSnap.docs.forEach(d => { results[d.data().matchId] = d.data() })
+
+  const matchRound = {}
+  const fixtures = fixturesSnap.exists() ? (fixturesSnap.data().matches || []) : []
+  fixtures.forEach(m => { matchRound[m.id] = m.round })
 
   const predsByMatch = {}
   predsSnap.docs.forEach(d => {
@@ -254,11 +274,12 @@ export async function recalcLeaderboard(leagueId) {
 
   const totals = {}
   predsSnap.docs.forEach(d => {
-    const pred = d.data()
-    const pts  = calcPoints(pred, results[pred.matchId], predsByMatch[pred.matchId] || [])
+    const pred  = d.data()
+    const round = matchRound[pred.matchId] || null
+    const pts   = calcPoints(pred, results[pred.matchId], predsByMatch[pred.matchId] || [], round)
     if (!totals[pred.uid]) totals[pred.uid] = { uid: pred.uid, total: 0, exact: 0, correct: 0, scorerHits: 0 }
     totals[pred.uid].total += pts
-    const bd = pointsBreakdown(pred, results[pred.matchId], predsByMatch[pred.matchId] || [])
+    const bd = pointsBreakdown(pred, results[pred.matchId], predsByMatch[pred.matchId] || [], round)
     if (bd.exactBonus > 0)     totals[pred.uid].exact++
     else if (bd.result > 0)    totals[pred.uid].correct++
     if (bd.firstScorer > 0)    totals[pred.uid].scorerHits++

@@ -280,7 +280,7 @@ async function main() {
     const matches = await ensureFixtures()
     await fetchPendingSquads(matches)
     await fetchPendingResults(matches)
-    await recalcAllLeagues()
+    await recalcAllLeagues(matches)
   } catch (e) {
     console.error('\n❌  Fatal error:', e.message)
   }
@@ -289,8 +289,11 @@ async function main() {
   await logRun(callsThisRun)
   process.exit(0)
 }
-async function recalcAllLeagues() {
+async function recalcAllLeagues(matches = []) {
   console.log('\n🏆  Recalculating leaderboards…')
+  const matchRound = {}
+  matches.forEach(m => { matchRound[m.id] = m.round })
+
   const leaguesSnap = await db.collection('leagues').get()
   for (const leagueDoc of leaguesSnap.docs) {
     const leagueId = leagueDoc.id
@@ -312,7 +315,8 @@ async function recalcAllLeagues() {
       const leaguePreds = predsByMatch[pred.matchId] || []
       const result = results[pred.matchId]
       if (!result) return
-      const pts = calcPointsAdmin(pred, result, leaguePreds)
+      const round = matchRound[pred.matchId] || null
+      const pts = calcPointsAdmin(pred, result, leaguePreds, round)
       if (!totals[pred.uid]) totals[pred.uid] = { uid: pred.uid, total: 0, exact: 0, correct: 0, scorerHits: 0 }
       totals[pred.uid].total += pts
       const exactH = pred.homeScore === result.homeScore
@@ -347,7 +351,13 @@ function normName(n) {
     .toLowerCase()
 }
 
-function calcPointsAdmin(prediction, result, leaguePreds = []) {
+function roundMultiplier(round) {
+  if (!round) return 1
+  const r = round.toLowerCase()
+  return (r.includes('quarter') || r.includes('semi') || r.includes('final') || r.includes('3rd')) ? 2 : 1
+}
+
+function calcPointsAdmin(prediction, result, leaguePreds = [], round = null) {
   if (!prediction || !result || result.homeScore == null) return 0
   let pts = 0
   const pw = Math.sign(prediction.homeScore - prediction.awayScore)
@@ -370,6 +380,6 @@ function calcPointsAdmin(prediction, result, leaguePreds = []) {
     const scorerPicks = leaguePreds.filter(p => normName(p.firstScorer) === normName(prediction.firstScorer)).length
     if (scorerPicks / leaguePreds.length < 0.05) pts += 2
   }
-  return pts
+  return pts * roundMultiplier(round)
 }
 main()
